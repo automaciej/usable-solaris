@@ -1,0 +1,24 @@
+#!/bin/bash
+
+function usage {
+	echo "create-zone.sh -z foo"
+}
+
+while getopts z: o
+do
+	case "$o" in
+		z)	ZONE_NAME="$OPTARG" ;;
+		h)	usage;;
+	esac
+done
+
+export TERM=xterm
+if [[ -z "${ZONE_NAME}" ]]
+then
+	usage
+	exit 1
+fi
+
+zoneadm -z "${ZONE_NAME}" halt
+zoneadm -z "${ZONE_NAME}" uninstall -F
+zonecfg -z "${ZONE_NAME}" delete -F
