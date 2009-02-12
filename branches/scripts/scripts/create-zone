@@ -1,0 +1,82 @@
+#!/bin/bash
+
+function usage {
+	echo "create-zone.sh -z foo"
+}
+
+while getopts z: o
+do
+	case "$o" in
+		z)	ZONE_NAME="$OPTARG" ;;
+		h)	usage;;
+	esac
+done
+
+export TERM=xterm
+# export ZONE_NAME="lobelia-zone2.home.blizinski.pl"
+if [[ -z "${ZONE_NAME}" ]]
+then
+	usage
+	exit 1
+fi
+
+export ZONE_IP="$(dig +short $ZONE_NAME)"
+if [[ -z "${ZONE_IP}" ]]
+then
+	echo "No IP known for ${ZONE_NAME}"
+	exit 1
+fi
+export ZONE_IF="$(ifconfig -a4 | grep -v 'LOOPBACK' | grep '^[a-z]' | cut -d: -f1 | head -1)"
+
+NETMASK="255.255.255.0"
+GATEWAY="192.168.3.2"
+DNS_SERVER="192.168.3.2"
+
+[[ ! -d /puddle/zones ]] && zfs create puddle/zones
+[[ ! -d "/puddle/zones/${ZONE_NAME}" ]] && zfs create "puddle/zones/${ZONE_NAME}"
+
+zonecfg="${ZONE_NAME}.zonecfg"
+sysidcfg="${ZONE_NAME}.sysidcfg"
+
+cat > ${zonecfg} <<EOF
+create
+add net
+set address=${ZONE_IP}
+set physical=${ZONE_IF}
+end
+set autoboot=true
+set zonepath=/zones/${ZONE_NAME}
+add dataset
+set name=puddle/zones/${ZONE_NAME}
+end
+verify
+commit
+exit
+EOF
+
+zonecfg -z "${ZONE_NAME}" -f ${zonecfg}
+zoneadm -z "${ZONE_NAME}" install
+
+# sysidcfg:
+cat > ${sysidcfg} <<EOF
+system_locale=en_IE.UTF-8
+timezone=Europe/Dublin
+terminal=xterms
+security_policy=NONE
+root_password=boajrOmU7GFmY
+timeserver=0.europe.pool.ntp.org
+nameservice=DNS {
+domain_name=home.blizinski.pl
+name_server=${DNS_SERVER}
+search=home.blizinski.pl }
+nfs4_domain=dynamic
+network_interface=PRIMARY {
+hostname=${ZONE_NAME}
+ip_address=${ZONE_IP}
+netmask=${NETMASK}
+protocol_ipv6=yes
+default_route=$GATEWAY}
+EOF
+
+cp ${sysidcfg} /zones/${ZONE_NAME}/root/etc/sysidcfg
+zoneadm -z "${ZONE_NAME}" boot
