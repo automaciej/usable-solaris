@@ -6,7 +6,8 @@ $Id$
 So, you've got this sparc machine you're planning to play with, right?
 
 Has it got any CD-ROM? No? Uh oh, you'll need to do some fiddling to get the OS
-there.  Your best bet is the network.  I assume you already have an x86 box.
+there.  Your best bet is the network.  I assume you already have an x86 box, and
+your network layout looks similar to this one:
 
 --------------------------------------------------------------------------------
 x86-box ------(192.168.1.0/24)------ sparc-box
@@ -19,11 +20,17 @@ First, you will need to get access to your sparc machine via a serial port. If
 it is a Netra (as mine happens to be), you may need to craft your own special
 serial cable (see links at the bottom). Otherwise, a standard cable such as
 those used with Cisco routers will do. You'll probably use an USB serial
-adapter. Your connection to the sparc box will be two-way:
+adapter. You'll have a two-path connection to the sparc box.
 
 --------------------------------------------------------------------------------
-x86-box ------(192.168.1.0/24)------ sparc-box
-x86-box [/dev/ttyUSB0] ----(serial)---- [/dev/ttya] sparc-box
++----------------+                               +-------------------+
+| x86-box        |                               | sparc-box         |
+|                |                               |                   |
+| [/dev/ttyUSB0] |                               | [/dev/ttya]       |
+|              [USB] -----(serial cable)------ [serial port]         |
+|                |                               |                   |
+|	       [eth0] ----(192.168.1.0/24)---- [e1000g0]             |
++----------------+                               +-------------------+
 --------------------------------------------------------------------------------
 
 After you connect the USB serial adapter, you should see a new device:
@@ -42,8 +49,8 @@ like this:
 lom> █
 --------------------------------------------------------------------------------
 
-LOM, Ligths Out Manager, has a simple command-line interface. Type `help` to
-learn more about it.
+LOM, the Ligths Out Manager, has a simple command-line interface. Type `help` to
+learn more about its functionality.
 
 
 JumpStart overview
@@ -143,9 +150,10 @@ bash-3.00# █
 
 It's got sucky prompt by default, let's set it to something different.
 
+// bash-3.00# PS1="\u@\h \w # "
 --------------------------------------------------------------------------------
-bash-3.00# PS1="\u@\h \w # "
-root@vsol01 / # echo 'PS1="\u@\h \w # "' >> ~/.bashrc
+bash-3.00# PS1="\[\033[01;31m\]\h\[\033[01;34m\] \W \$\[\033[00m\] "
+root@vsol01 / # echo "PS1=\"$PS1\"" >> ~/.bashrc
 root@vsol01 / # █
 --------------------------------------------------------------------------------
 
@@ -157,7 +165,7 @@ If you want to do any editing in vi and you're using GNU screen, you need to set
 your TERM variable into something that bare Solaris understands:
 
 --------------------------------------------------------------------------------
-root@vsol01 / # export TERM=xterm
+export TERM=xterm
 --------------------------------------------------------------------------------
 
 Let's set up some things:
@@ -168,11 +176,11 @@ echo >> /etc/opt/csw/pkgutil.conf \
 
 echo >> /etc/default/login \
   "PATH=/bin:/sbin:/usr/sbin:/usr/bin:/opt/csw/sbin:/opt/csw/bin:\
-/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin"
+/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin"
 
 echo >> /etc/default/login \
   "PATH=/bin:/sbin:/usr/sbin:/usr/bin:/opt/csw/sbin:/opt/csw/bin:\
-/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin"
+/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin"
 --------------------------------------------------------------------------------
 
 Since we were setting up PATHs, you can logout and log back in.
@@ -184,30 +192,17 @@ pkgutil --catalog
 Now you can install all the software available from Blastwave. Some of my first
 choices:
 
-* bash_completion
+* vim
 * elinks
 * findutils (and running `gupdatedb &`)
-* gawk
-* gsed
-* gtar
-* mc
-* ncftp
-* netcat
-* pstree
-* readline
-* rsync
-* screen
-* shutils
+* gawk, ggrep, gsed, gtar
+* wget, rsync
 * sudo
 * tree
-* unzip
-* vim
-* w3m
-* wget
-* zsh
+* screen, mc
 
-JET, JumpStart Enterprise Toolkit
----------------------------------
+Installing JET, JumpStart Enterprise Toolkit
+--------------------------------------------
 
 Go to the JumpStart website, download the `jet.pkg.bz2` package and follow
 instructions. It's basically about installing the jet package, then copying
@@ -250,31 +245,36 @@ GNU/Linux, while Solaris client expects NFS 4. You'll be getting rather
 unhelpful error messages. Edit `/etc/default/nfs` on Solaris and set client max
 NFS version to 3. Then try mounting again.
 
-JumpStart template
-~~~~~~~~~~~~~~~~~~
+Make sure that `/export/install` is exported via NFS:
 
-Now, let's make a template. First, it's best if you have your hostname
-configured in DNS and RevDNS. If your host is, say `sparcbox`, and `sparcbox`
-resolves in your DNS, JET will pick up the IP address and put it into the
-template.
+--------------------------------------------------------------------------------
+share -o ro,anon=0 /export/install
+shareall
+--------------------------------------------------------------------------------
+
+NOTE: You can't have `/export/install` mounted via NFS. If you do, JET needs to
+export it and you can't export something that is a remote mount. You need to
+have it on a local disk.
+
+What is a template
+~~~~~~~~~~~~~~~~~~
 
 A _template_ in JET is not so much a template, at least from your perspective.
 It is a template in a sense, that it's used to generate configuration for
 jumpstart, the underlying technology, which is really a collection of RARP, TFTP
 and NFS stuff.
 
+It's best if you have your hostname configured in DNS and RevDNS. If your host
+is, say `sparcbox`, and `sparcbox` resolves in your DNS, JET will pick up the IP
+address and put it into the template.
+
+Making one
+~~~~~~~~~~
+Now, let's make it.
+
 --------------------------------------------------------------------------------
 cd /opt/SUNWjet/Templates
-make_template sparcbox base_config sds jass sbd custom explo zones zfs
-vim sparcbox
---------------------------------------------------------------------------------
-
-Before you can `make_client`, make sure that `/export/install` is exported via
-NFS:
-
---------------------------------------------------------------------------------
-share -o ro,anon=0 /export/install
-shareall
+make_template sparcbox base_config sds sbd custom zfs
 --------------------------------------------------------------------------------
 
 Editing the template
@@ -283,11 +283,22 @@ Editing the template
 Now, you can edit the file named `sparcbox` (or whatever is the name of your
 machine).
 
-TODO: Elaborate more on templates.
+--------------------------------------------------------------------------------
+vim sparcbox
+--------------------------------------------------------------------------------
+
+
+
+Making a 'Client'
+~~~~~~~~~~~~~~~~~
+When your template is ready, you can `make_client`, which means that JET scripts
+will pick up stuff that you enclosed in the template and configure JumpStart.
 
 --------------------------------------------------------------------------------
-make_client -f sparcbox
+make_client sparcbox
 --------------------------------------------------------------------------------
+
+_If you run it multiple times, you need to add the `-f` flag._
 
 If this command fails you'll notice it quite easily. The good side is it prints
 useful error messages.
@@ -329,7 +340,9 @@ This step should be entirely automatic. From `boot net - install`, you should go
 straight to the `login:` prompt. If you're being asked installation questions
 such as network configuration or time, something's missing from your jumpstart
 template. You still _can_ get your machine installed that way, it's just not
-fully automatic.
+fully automatic. Go back to the template and try to find settings relevant to
+the questions you've been asked. A common problem is that the sparc box couldn't
+find the NTP server.
 
 When installation is complete, you'll see something like this:
 
@@ -342,9 +355,64 @@ Congratulations! You've got Solaris installed! You can now play around and see
 how sparc hardware is different from x86. Look at commands beginning with `prt`,
 as they print out various bits of information.
 
+Ah, wait, the root password. Right. It's:
+
+--------------------------------------------------------------------------------
+newroot
+--------------------------------------------------------------------------------
+
+It's JumpStart's default. Go ahead and change it.
+
+This is just the first iteration of JumpStart install. You will probably want to
+change some things in the template and reinstall your machine, and keep
+repeating that until you're satisfied.
+
+If you want to reinstall your sparc box and you're in the shell (as opposed to
+OBP), you could reboot, or send a `break` to the system, but there's a simpler
+way:
+
+--------------------------------------------------------------------------------
+root@netra / # reboot -- net - install
+--------------------------------------------------------------------------------
+
+
+When a command is missing
+~~~~~~~~~~~~~~~~~~~~~~~~~
+You may see that a command you had on the JumpStart server isn't there on your
+sparc box.
+
+--------------------------------------------------------------------------------
+root@netra / # less
+bash: less: command not found
+--------------------------------------------------------------------------------
+
+Go to the JumpStart server, find out where's your binary and which package does
+it belong to.
+
+--------------------------------------------------------------------------------
+root@vsol01 / # which less
+/usr/bin/less
+root@vsol01 / # pkgchk -l -p /usr/bin/less
+Pathname: /usr/bin/less
+Type: regular file
+Expected mode: 0555
+Expected owner: root
+Expected group: bin
+Expected file size (bytes): 101412
+Expected sum(1) of contents: 5918
+Expected last modification: Jan 23 02:23:38 2005
+Referenced by the following packages:
+        SUNWless       
+Current status: installed
+--------------------------------------------------------------------------------
+
+Here, we have found that the `less` command comes from `SUNWless` package. You
+can go to the JumpStart template and add `SUNWless` to the
+`base_config_profile_add_packages` list.
+
 
 Incorporating CSW (a.k.a. Blastwave) into JumpStart
----------------------------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 When we're talking about making Solaris usable, we're not talking about the
 temporary, virtual one, we're talking about the one you're installing on the
 sparc box.
@@ -366,23 +434,20 @@ rsync -v -rlptH --progress \
 
 First we need to figure the list of packages that we want, with dependencies.
 The easiest way to go at this, will consist of first installing all the CSW
-packages we want on the our JumpStart server. Read what's there, and install
-what interests you.
+packages we want on the our JumpStart server. Read what's there, and note down
+which packages interest you. Of course, you can install them as well.
 
 --------------------------------------------------------------------------------
 pkgutil --available | less
 pkgutil --install package_name
 --------------------------------------------------------------------------------
 
-`pkgutil` will figure out and install all the dependencies. After we're done, we
-can see the full list of CSW packages that have been installed.
+`pkgutil` will figure out and install all the dependencies. After you're done,
+you can see the full list of CSW packages that have been installed.
 
 --------------------------------------------------------------------------------
 pkginfo | gawk '$2 ~ /^CSW/ { print $2 }'
 --------------------------------------------------------------------------------
-
-Now that we have the list of packages, we want to pull down corresponding sparc
-packages and add them to jumpstart.
 
 `pkgutil` is able to create a _package stream_ with all the dependencies in it.
 Here, we want to build package for sparc platform, even though we're working on
@@ -390,12 +455,13 @@ an x86 right now.
 
 --------------------------------------------------------------------------------
 pkgutil -s --target=sparc:5.10 -o cswstuff.sparc.5.10.pkg \
-  bash_completion elinks findutils gawk gsed gtar mc ncftp netcat pstree \
-  readline rsync screen shutils sudo tree unzip vim w3m wget zsh
+  bash_completion elinks fileutils findutils gawk ggrep gsed gtar mc ncftp \
+  netcat pstree readline rsync screen shutils sudo tree \
+  unarj unrar unzip vim w3m wget zsh pkgutil puppet
 --------------------------------------------------------------------------------
 
-_My actual list is a bit longer and includes, among others, Puppet, and tool for
-configuration management._
+// _My actual list is a bit longer and includes, among others, Puppet,
+// a configuration management tool._
 
 You may see a message like this: 
 
@@ -424,6 +490,7 @@ Look into `/var/opt/csw/pkgutil/packages` and find your file:
 `/export/install/pkgs/custom/sparc`.
 
 --------------------------------------------------------------------------------
+mkdir -p /export/install/pkgs/custom/sparc
 pkgtrans /var/opt/csw/pkgutil/packages/cswstuff.sparc.5.10.pkg \
   /export/install/pkgs/custom/sparc all
 ls -l /export/install/pkgs/custom/sparc
@@ -450,8 +517,15 @@ Otherwise your custom packages won't be installed at all.
 
 Adding custom scripts
 ---------------------
+Some tasks that we would like to do after installation, can be automated.
 
-TODO.
+* Setting root home directory to `/root`
+* Setting a better prompt
+* Setting default paths
+* Importing blastwave gpg key
+* Configuring pkgutil
+
+TODO: Write scripts.
 
 Contact
 -------
