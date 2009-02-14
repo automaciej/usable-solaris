@@ -1,15 +1,53 @@
 Turning up a sparc box
 ======================
+Maciej Bliziński
+$Id$
 
 So, you've got this sparc machine you're planning to play with, right?
 
 Has it got any CD-ROM? No? Uh oh, you'll need to do some fiddling to get the OS
-there.  Your best bet is the network.
+there.  Your best bet is the network.  I assume you already have an x86 box.
+
+--------------------------------------------------------------------------------
+x86-box ------(192.168.1.0/24)------ sparc-box
+--------------------------------------------------------------------------------
+
+Serial port
+-----------
 
 First, you will need to get access to your sparc machine via a serial port. If
 it is a Netra (as mine happens to be), you may need to craft your own special
-serial cable. Otherwise, a standard cable such as those used with Cisco routers
-will do.
+serial cable (see links at the bottom). Otherwise, a standard cable such as
+those used with Cisco routers will do. You'll probably use an USB serial
+adapter. Your connection to the sparc box will be two-way:
+
+--------------------------------------------------------------------------------
+x86-box ------(192.168.1.0/24)------ sparc-box
+x86-box [/dev/ttyUSB0] ----(serial)---- [/dev/ttya] sparc-box
+--------------------------------------------------------------------------------
+
+After you connect the USB serial adapter, you should see a new device:
+`/dev/ttyUSB0`. You can connect to it using minicom, which is a popular serial
+communication program, but you can as well use GNU screen.
+
+--------------------------------------------------------------------------------
+stty -F /dev/ttyUSB0 9600
+screen /dev/ttyUSB0
+--------------------------------------------------------------------------------
+
+At first, you'll see an empty screen. Tap ENTER and you should see something
+like this:
+
+--------------------------------------------------------------------------------
+lom> █
+--------------------------------------------------------------------------------
+
+LOM, Ligths Out Manager, has a simple command-line interface. Type `help` to
+learn more about it.
+
+
+JumpStart overview
+------------------
 
 To get Solaris installed on your sparc box, you need to use something called
 JumpStart, or JumpStart Enterprise Toolkit, referred to as JET. It runs on...
@@ -19,6 +57,9 @@ your sparc box off it. Alternatively, you could get to understand how JumpStart
 works and set it up on GNU/Linux, but I think it's a nice excuse to have one
 more Solaris installation and use this set of dodgy shell scripts, because that
 what JET essentially is, to set up JumpStart for you.
+
+NOTE: Sun like to distort the common symbol for Intel architecture, `x86`. You
+may see `X86` or other weird things, like `i86pc`. I have no idea why is that.
 
 I've tried running Solaris on kvm, and got it sort of installed, but it didn't
 really want to run.  My best experiences were with VirtualBox, which is now
@@ -143,14 +184,27 @@ pkgutil --catalog
 Now you can install all the software available from Blastwave. Some of my first
 choices:
 
-* vim
-* gtar
-* wget
+* bash_completion
 * elinks
-* screen
 * findutils (and running `gupdatedb &`)
-* tree
+* gawk
+* gsed
+* gtar
+* mc
+* ncftp
+* netcat
+* pstree
+* readline
 * rsync
+* screen
+* shutils
+* sudo
+* tree
+* unzip
+* vim
+* w3m
+* wget
+* zsh
 
 JET, JumpStart Enterprise Toolkit
 ---------------------------------
@@ -200,8 +254,9 @@ JumpStart template
 ~~~~~~~~~~~~~~~~~~
 
 Now, let's make a template. First, it's best if you have your hostname
-configured in DNS and RevDNS. If your host is, say `netra`, and `netra` resolves
-in your DNS, JET will pick up the IP address and put it into the template.
+configured in DNS and RevDNS. If your host is, say `sparcbox`, and `sparcbox`
+resolves in your DNS, JET will pick up the IP address and put it into the
+template.
 
 A _template_ in JET is not so much a template, at least from your perspective.
 It is a template in a sense, that it's used to generate configuration for
@@ -210,8 +265,8 @@ and NFS stuff.
 
 --------------------------------------------------------------------------------
 cd /opt/SUNWjet/Templates
-make_template netra base_config sds jass sbd custom explo zones zfs
-vim netra
+make_template sparcbox base_config sds jass sbd custom explo zones zfs
+vim sparcbox
 --------------------------------------------------------------------------------
 
 Before you can `make_client`, make sure that `/export/install` is exported via
@@ -225,13 +280,13 @@ shareall
 Editing the template
 ~~~~~~~~~~~~~~~~~~~~
 
-Now, you can edit the file named `netra` (or whatever is the name of your
+Now, you can edit the file named `sparcbox` (or whatever is the name of your
 machine).
 
 TODO: Elaborate more on templates.
 
 --------------------------------------------------------------------------------
-make_client -f netra
+make_client -f sparcbox
 --------------------------------------------------------------------------------
 
 If this command fails you'll notice it quite easily. The good side is it prints
@@ -276,13 +331,127 @@ such as network configuration or time, something's missing from your jumpstart
 template. You still _can_ get your machine installed that way, it's just not
 fully automatic.
 
+When installation is complete, you'll see something like this:
 
-Incorporating Blastwave into JumpStart
---------------------------------------
+--------------------------------------------------------------------------------
+JumpStart is complete @ Monday  9 February 2009 08:51:40 GMT
+sparcbox console login: █
+--------------------------------------------------------------------------------
+
+Congratulations! You've got Solaris installed! You can now play around and see
+how sparc hardware is different from x86. Look at commands beginning with `prt`,
+as they print out various bits of information.
+
+
+Incorporating CSW (a.k.a. Blastwave) into JumpStart
+---------------------------------------------------
 When we're talking about making Solaris usable, we're not talking about the
-temporary one on your virtual machine, we're talking about the one you're
-installing on the sparc box.
+temporary, virtual one, we're talking about the one you're installing on the
+sparc box.
 
+One of the steps will be installing the _useful_ software, stuff that is
+available from CSW. Generally, we know how to install it, but what we really
+want here, is having it installed as part of JumpStart procedure.
+
+////////////////////////////////////////////////////////////////////////////////
+We'll do it in a lazy way. First, let's mirror the whole thing and put it on the
+virtual machine.
+
+--------------------------------------------------------------------------------
+rsync -v -rlptH --progress \
+  rsync://ftp.heanet.ie/pub/csw/unstable/sparc \
+  csw/unstable/sparc
+--------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+First we need to figure the list of packages that we want, with dependencies.
+The easiest way to go at this, will consist of first installing all the CSW
+packages we want on the our JumpStart server. Read what's there, and install
+what interests you.
+
+--------------------------------------------------------------------------------
+pkgutil --available | less
+pkgutil --install package_name
+--------------------------------------------------------------------------------
+
+`pkgutil` will figure out and install all the dependencies. After we're done, we
+can see the full list of CSW packages that have been installed.
+
+--------------------------------------------------------------------------------
+pkginfo | gawk '$2 ~ /^CSW/ { print $2 }'
+--------------------------------------------------------------------------------
+
+Now that we have the list of packages, we want to pull down corresponding sparc
+packages and add them to jumpstart.
+
+`pkgutil` is able to create a _package stream_ with all the dependencies in it.
+Here, we want to build package for sparc platform, even though we're working on
+an x86 right now.
+
+--------------------------------------------------------------------------------
+pkgutil -s --target=sparc:5.10 -o cswstuff.sparc.5.10.pkg \
+  bash_completion elinks findutils gawk gsed gtar mc ncftp netcat pstree \
+  readline rsync screen shutils sudo tree unzip vim w3m wget zsh
+--------------------------------------------------------------------------------
+
+_My actual list is a bit longer and includes, among others, Puppet, and tool for
+configuration management._
+
+You may see a message like this: 
+
+--------------------------------------------------------------------------------
+MD5 for CSWosslrt doesn't match catalog!
+at /opt/csw/bin/pkgutil line 676, <STDIN> line 1.`
+--------------------------------------------------------------------------------
+
+It is usually triggered by incomplete file in `/var/opt/csw/pkgutil/packages`.
+Locate which file it was and delete it.
+
+--------------------------------------------------------------------------------
+rm /var/opt/csw/pkgutil/packages/openssl_rt-0.9.8\,REV\=2007.12.26_rev\=g-SunOS5.8-sparc-CSW.pkg.gz
+--------------------------------------------------------------------------------
+
+After pkgutil is finished, it will print a “dependency safe order” in which you
+can install those packages. You don't have to write it down, JumpStart will take
+care of the installation order. Let's find the package stream now. What is
+a package stream? It's a form of an archive (similar to tar), which can contain
+multiple packages. Packages can also come in “directory format”, which means
+that a package is a directory with files in it. JumpStart wants packages in
+directory format, we got a package stream. Conversion is needed.
+
+Look into `/var/opt/csw/pkgutil/packages` and find your file:
+`cswstuff.sparc.5.10.pkg`. The destination directory will be
+`/export/install/pkgs/custom/sparc`.
+
+--------------------------------------------------------------------------------
+pkgtrans /var/opt/csw/pkgutil/packages/cswstuff.sparc.5.10.pkg \
+  /export/install/pkgs/custom/sparc all
+ls -l /export/install/pkgs/custom/sparc
+--------------------------------------------------------------------------------
+
+Now, edit JumpStart template for your host and add all those CSW package names
+to a variable named `custom_packages`.
+
+--------------------------------------------------------------------------------
+custom_packages="
+CSWaspell
+CSWbashcmplt
+CSWbdb3
+CSWbzip2
+...
+CSWzlib
+CSWzsh
+"
+--------------------------------------------------------------------------------
+
+Make sure that the word `custom` is included in `base_config_products`.
+Otherwise your custom packages won't be installed at all.
+
+
+Adding custom scripts
+---------------------
+
+TODO.
 
 Contact
 -------
@@ -295,7 +464,6 @@ python -c "print 'bWFjaWVqLmJsaXppbnNraUBnbWFpbC5jb20=\n'.decode('base64')"
 --------------------------------------------------------------------------------
 
 
-
 References
 ----------
 * http://www.sun.com/software/solaris/[Solaris Operating System]
@@ -304,5 +472,7 @@ References
 * http://www.sun.com/bigadmin/content/jet/[JumpStart]
 * http://www.sun.com/software/security/jass/[SUNWjass]
 * http://www.sun.com/service/stb/index.jsp[Explorer]
+* http://devin.com/debian/debian-on-netra.html[Installing Debian on Netra T1]
+  (serial cable pinout table)
 
 // vim:set ft=asciidoc:
