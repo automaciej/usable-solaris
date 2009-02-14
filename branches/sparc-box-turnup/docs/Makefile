@@ -1,4 +1,4 @@
 all: sparc-box-turnup.html
 
 %.html: %.txt
-	asciidoc $<
+	asciidoc -a toc -a numbered $<
