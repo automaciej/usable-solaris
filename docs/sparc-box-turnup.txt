@@ -23,13 +23,13 @@ those used with Cisco routers will do. You'll probably use an USB serial
 adapter. You'll have a two-path connection to the sparc box.
 
 --------------------------------------------------------------------------------
-+----------------+                               +-------------------+
-| x86-box        |                               | sparc-box         |
++-(x86 box)------+                               +-(sparc box)-------+
+|                |                               |                   |
+|         [eth0] |                               | [hme0]            |
+|	       [RJ45] ----(192.168.1.0/24)---- [RJ45]                |
 |                |                               |                   |
 | [/dev/ttyUSB0] |                               | [/dev/ttya]       |
 |              [USB] -----(serial cable)------ [serial port]         |
-|                |                               |                   |
-|	       [eth0] ----(192.168.1.0/24)---- [e1000g0]             |
 +----------------+                               +-------------------+
 --------------------------------------------------------------------------------
 
@@ -58,24 +58,57 @@ JumpStart overview
 
 To get Solaris installed on your sparc box, you need to use something called
 JumpStart, or JumpStart Enterprise Toolkit, referred to as JET. It runs on...
-Solaris! Haven't we got a chicken and egg problem here? Well, yes, we have, but
-you can first install Solaris on a virtual machine, install JET on it, and boot
-your sparc box off it. Alternatively, you could get to understand how JumpStart
-works and set it up on GNU/Linux, but I think it's a nice excuse to have one
-more Solaris installation and use this set of dodgy shell scripts, because that
-what JET essentially is, to set up JumpStart for you.
+Solaris! Haven't we got a chicken and egg problem here? Well, yes, we have.
 
-NOTE: Sun like to distort the common symbol for Intel architecture, `x86`. You
-may see `X86` or other weird things, like `i86pc`. I have no idea why is that.
+One way around it would be to install Solaris off a DVD on a physical x86 box
+and then use it to install Solaris over the network. I didn't have an extra x86
+box laying around, so I decided to install Solaris on a virtual machine.
 
-I've tried running Solaris on kvm, and got it sort of installed, but it didn't
-really want to run.  My best experiences were with VirtualBox, which is now
-a Sun in-house product, so it's important for them, for political reasons
-I guess, that it runs Solaris smoothly.
+Alternatively, you could get to understand how JumpStart works and set it up on
+GNU/Linux. JumpStart is really a collection of RARP, BOOTP, TFTP and NFS stuff,
+there's nothing preventing you from setting them all up. However, I think that
+installing Solaris and using JET has a much more flat learning curve.
+
+NOTE: Sun like to distort the common symbol for Intel architecture, `x86`.
+You may see `X86` or other weird things, like `i86pc`. I have no idea why is
+that. I'll keep calling it `x86`.
+
+If we're going the virtual machine route, the diagram will look more like this:
+
+--------------------------------------------------------------------------------
++-(x86 box)------------------+                         +-(sparc box)-------+
+|                            |                         |                   |
+| GNU/Linux                  |                         | (No OS yet)       |
+|                            |                         |                   |
+| +-(virtual machine)--+     |                         |                   |
+| |                    |     |                         |                   |
+| | Solaris            |     |                         |                   |
+| |             [e1000g0]-+  |                         |                   |
+| |                    |  |  |                         |                   |
+| +--------------------+  |  |                         |                   |
+|                         |  |                         |                   |
+|                 [eth0]--+  |                         |                   |
+|                         |  |                         |                   |
+|                      [br0] |                         | [e1000g0]         |
+|	                 [RJ45] --(192.168.1.0/24)-- [RJ45]                |
+|                            |                         |                   |
+|             [/dev/ttyUSB0] |                         | [/dev/ttya]       |
+|                         [USB] ---(serial cable)--- [serial port]         |
+|                            |                         |                   |
++----------------------------+                         +-------------------+
+--------------------------------------------------------------------------------
+
+I tried running Solaris on few virtual machines. I got it sort of installed on
+kvm, but it didn't really want to run.  My best experiences were with
+VirtualBox, which is now a Sun product, so it's important for them, for
+political reasons I guess, that it runs Solaris smoothly. Browse the source
+code, look into the `scripts/vbox` directory.
 
 NOTE: Your virtual machine _must_ be L2-adjacent to your sparc box. In other
 words, it must be in the same subnet (say, `192.168.0.1/24`). It's because
-JumpStart uses RARP, which cannot be routed.
+JumpStart uses RARP, which cannot be routed.  For the same reason, you need to
+use bridged networking of your virtual machine.  If you use NAT, RARP will not
+work.
 
 I won't go into much detail of how to install Solaris on a virtual machine. Just
 a couple of hints.
@@ -287,10 +320,135 @@ machine).
 vim sparcbox
 --------------------------------------------------------------------------------
 
+JumpStart templates have very good comments. Read through them and you'll get
+a good idea what to put where. I'll only point out more important bits and some
+gotchas.
 
+Bits you need to edit:
 
-Making a 'Client'
-~~~~~~~~~~~~~~~~~
+Architecture type
+^^^^^^^^^^^^^^^^^
+Which architecture you need, can be looked up in comments. Mine was `sun4u`.
+
+--------------------------------------------------------------------------------
+base_config_ClientArch=sun4u
+base_config_ClientEther=XX.XX.XX.XX.XX.XX
+base_config_ClientOS=10_U6_SPARC
+--------------------------------------------------------------------------------
+
+The `10_U6_SPARC` bit should match what was used in `copy_solaris_media`.
+
+JumpStart sysidcfg information
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+When specifying `base_config_sysidcfg_nameservice`, you need to enclose the
+whole thing in quotes.
+
+--------------------------------------------------------------------------------
+base_config_sysidcfg_nameservice="DNS { domain_name=(...) }"
+--------------------------------------------------------------------------------
+
+Disk labeling
+^^^^^^^^^^^^^
+--------------------------------------------------------------------------------
+base_config_label_disks="all"
+base_config_profile_fdisk="alldisk"
+--------------------------------------------------------------------------------
+
+JumpStart profile information
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+`SUNWCuser` is selected by default. We won't need all that on the sparc box, and
+we'll learn how to pick and choose packages we want. `SUNWCreq` gives a much
+lighter OS base. (In a sense that it installs less packages.)
+
+--------------------------------------------------------------------------------
+base_config_profile_cluster=SUNWCreq
+--------------------------------------------------------------------------------
+
+Disk slices
+^^^^^^^^^^^
+
+--------------------------------------------------------------------------------
+@@ -330,8 +330,8 @@
+
+ base_config_profile_dontuse=""
+
+-base_config_profile_root=free
+-base_config_profile_swap=2048
++base_config_profile_root=4096
++base_config_profile_swap=1024
+
+ #
+ # If you are using VxVM and want your boot disk to look like the mirror, then
+@@ -343,15 +343,15 @@
+ #
+
+ base_config_profile_s3_mtpt=""
+-base_config_profile_s3_size=""
++base_config_profile_s3_size="free"
+
+ base_config_profile_s4_mtpt=""
+ base_config_profile_s4_size=""
+
+-base_config_profile_s5_mtpt="/var"
+-base_config_profile_s5_size=""
++base_config_profile_s5_mtpt=""
++base_config_profile_s5_size="4096"
+
+-base_config_profile_s6_mtpt="/usr"
++base_config_profile_s6_mtpt=""
+ base_config_profile_s6_size=""
+
+ #
+@@ -360,7 +360,7 @@
+ # please avoid using s7 for data!
+ #
+
+-base_config_profile_s7_mtpt="/opt"
++base_config_profile_s7_mtpt=""
+ base_config_profile_s7_size=""
+ #
+ ############
+--------------------------------------------------------------------------------
+
+Additional packages and clusters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------------------------------------------------------
+base_config_profile_add_packages="SUNWman SUNWless"
+base_config_profile_add_clusters="SUNWCfwshl SUNWCssh SUNWCipf SUNWCacc
+SUNWCadm SUNWCkrb5 SUNWCnfsc SUNWCnfss SUNWCmpapi SUNWCdtrace SUNWCvld
+SUNWCdhcp SUNWCgcc SUNWCjv SUNWCjvx SUNWClu SUNWCnca SUNWCbdb SUNWCcpc
+SUNWCmd SUNWCmda SUNWCmco SUNWCopenssl SUNWCsmba SUNWCutf8 SUNWCwbem
+SUNWCwget SUNWCzfs SUNWCzone SUNWCpool"
+--------------------------------------------------------------------------------
+
+Strings spanning multiple lines will work fine.
+
+SDS -- disk mirror
+^^^^^^^^^^^^^^^^^^
+JumpStart can allow to create a mirrored root in a very easy way. All you need
+is two disks of the same size and knowing which one is going to be the mirror.
+
+--------------------------------------------------------------------------------
+@@ -818,7 +849,7 @@
+ # partitions for you, but you will have to populate the sds_database_*
+ # variables if you want a metadb to exist on the root mirror.
+ #
+-sds_root_mirror=""
++sds_root_mirror="c0t1d0"
+ # You MUST set fmthard=yes for Solaris 9 and above.
+ sds_use_fmthard="yes"
+
+--------------------------------------------------------------------------------
+
+_(In my case, the mirror had to be `c0t0d0`, as `c0t1d0` was the primary disk.)_
+
+It's perfectly save to skip this part during the first install and figure out
+which disk is which on a live system. Then you can go back to this place and
+enter the name of the mirror disk.
+
+make_client
+~~~~~~~~~~~
 When your template is ready, you can `make_client`, which means that JET scripts
 will pick up stuff that you enclosed in the template and configure JumpStart.
 
@@ -300,8 +458,8 @@ make_client sparcbox
 
 _If you run it multiple times, you need to add the `-f` flag._
 
-If this command fails you'll notice it quite easily. The good side is it prints
-useful error messages.
+If this command fails you'll notice it quite easily, as it printd a huge banner
+with the word 'FAILED'. Apart from the banner, it prints useful error messages.
 
 Launching the installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
