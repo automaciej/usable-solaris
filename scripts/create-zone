@@ -1,7 +1,26 @@
 #!/bin/bash
+#
+# $Id$
+#
+
+# TODO: Parametrize or automate this.
+ZPOOL_NAME=puddle
+NETMASK="255.255.255.0"
+GATEWAY="192.168.3.2"
+DNS_SERVER="192.168.3.2"
+
+echo >&2 "Please edit this script, make your settings and remove the next line."
+exit 1
+
+################################################################################
+## Do not modify below this line.
+################################################################################
+#
+# (Unless you're fixing a bug.)
+#
 
 function usage {
-	echo "create-zone.sh -z foo"
+	echo "create-zone.sh -z <zone-name>"
 }
 
 while getopts z: o
@@ -13,9 +32,10 @@ do
 done
 
 export TERM=xterm
-# export ZONE_NAME="lobelia-zone2.home.blizinski.pl"
+
 if [[ -z "${ZONE_NAME}" ]]
 then
+  echo >&2 "Zone name is missing."
 	usage
 	exit 1
 fi
@@ -28,12 +48,8 @@ then
 fi
 export ZONE_IF="$(ifconfig -a4 | grep -v 'LOOPBACK' | grep '^[a-z]' | cut -d: -f1 | head -1)"
 
-NETMASK="255.255.255.0"
-GATEWAY="192.168.3.2"
-DNS_SERVER="192.168.3.2"
-
-[[ ! -d /puddle/zones ]] && zfs create puddle/zones
-[[ ! -d "/puddle/zones/${ZONE_NAME}" ]] && zfs create "puddle/zones/${ZONE_NAME}"
+[[ ! -d "/${ZPOOL_NAME}/zones" ]] && zfs create ${ZPOOL_NAME}/zones
+[[ ! -d "/${ZPOOL_NAME}/zones/${ZONE_NAME}" ]] && zfs create "${ZPOOL_NAME}/zones/${ZONE_NAME}"
 
 zonecfg="${ZONE_NAME}.zonecfg"
 sysidcfg="${ZONE_NAME}.sysidcfg"
@@ -47,7 +63,7 @@ end
 set autoboot=true
 set zonepath=/zones/${ZONE_NAME}
 add dataset
-set name=puddle/zones/${ZONE_NAME}
+set name=${ZPOOL_NAME}/zones/${ZONE_NAME}
 end
 verify
 commit
