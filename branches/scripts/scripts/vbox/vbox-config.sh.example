@@ -1,0 +1,28 @@
+# $Id$
+#
+# Settings for a VirtualBox machine
+#
+# Copy this file to vbox-config.sh and edit settings.
+#
+# Path to Solaris installation DVD image
+readonly dvd="/media/ivy-shared/sol-10-u5-ga-x86-dvd.iso"
+
+# Path to the hard drive. Make sure that the destination filesystem has enough
+# space!
+readonly hd="/home/maciej/virt/vbox/8GB.vdi"
+
+# rdesktop port 
+readonly vrdpport=3990
+
+# Virtual machine disk size
+readonly disk_size=16384
+
+# Virtual box management commands
+readonly vb=VBoxManage
+readonly vbh=VBoxHeadless
+
+# Name of the virtual machine (doesn't necessarily have to be the host name)
+readonly vmname=vsol01
+
+
+
