@@ -1,0 +1,21 @@
+This is a Django application allowing to index and then browse instalations of
+Solaris packages.
+
+Populating the database
+-----------------------
+
+Get the output of pkginfo.
+
+--------------------------------------------------------------------------------
+solarisbox=fqdn.yourdomain.com
+ssh ${solarisbox} pkginfo -l > ${solarisbox}.pkginfo
+--------------------------------------------------------------------------------
+
+Execute Django shell
+
+--------------------------------------------------------------------------------
+./manage.py shell
+from solaris.packages import MachineEnumerator
+me = MachineEnumerator("fqdn.yourdomain.com")
+me.Executify()
+--------------------------------------------------------------------------------

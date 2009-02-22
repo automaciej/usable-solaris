@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+
+{% block title %}
+Package detail:  {{ object }}
+{% endblock %}
+
+{% block main_data %}
+<h2>{{ object }}</h2>
+<p><i>{{ object.name }}</i></p>
+<p>Package versions:</p>
+<ul>
+{% for package_version in object.packageversion_set.all %}
+  <li>
+    <a href="{{ package_version.package_version.package.get_absolute_url }}">{{ package_version.version }}</a>
+    <ul>
+      {% for packageinstallation in package_version.packageinstallation_set.all %}
+      <li><a href="{{ packageinstallation.machine.get_absolute_url }}">{{ packageinstallation.machine }}</a></li>
+      {% endfor %}
+    </ul>
+  </li>
+  {% endfor %}
+</ul>
+{% endblock %}
