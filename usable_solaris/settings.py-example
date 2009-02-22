@@ -58,10 +58,14 @@ TEMPLATE_LOADERS = (
 #     'django.template.loaders.eggs.load_template_source',
 )
 
+# Uncomment UpdateCacheMiddleware and FetchFromCacheMiddleware to enable
+# caching.
 MIDDLEWARE_CLASSES = (
+    # 'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    # 'django.middleware.cache.FetchFromCacheMiddleware',
 )
 
 ROOT_URLCONF = 'usable_solaris.urls'
@@ -81,3 +85,6 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     'usable_solaris.packages',
 )
+
+# Uncomment to enable caching. Read docs about other backends.
+# CACHE_BACKEND = "locmem:///"

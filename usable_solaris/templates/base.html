@@ -2,6 +2,19 @@
   <head>
     <title>{% block title %}Solaris stuff{% endblock %}</title>
     <meta http-equiv="Content-type" content="text/html; charset=UTF-8" />
+    <style>
+      table#package_matrix td {
+        border: 1px solid #DDD;
+        margin: 0px;
+      }
+      body, td, li, p {
+        font-size: 11px;
+        font-family: sans-serif;
+      }
+    </style>
+
+    {% block in_head %}
+    {% endblock %}
   </head>
   <body>
     {% block main_data %}

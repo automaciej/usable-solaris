@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}
+Package matrix
+{% endblock %}
+
+{% block in_head %}
+<style>
+  table#package_matrix tr.even { background-color: #DDD; }
+  table#package_matrix tr.odd { background-color: #FFF; }
+  table#package_matrix td, table#package_matrix th { font-size: 9px; }
+</style>
+{% endblock %}
+
+{% block main_data %}
+
+<table id="package_matrix">
+  <tr>
+    <td>&nbsp;</td>
+    {% for machine in machines %}
+    <th>
+      {{ machine.short }}
+    </th>
+    {% endfor %}
+  </tr>
+  <ul>
+  {% for row in matrix %}
+  <tr>
+    <td><a href="{{ row.package_version.package.get_absolute_url }}" title="{{ row.package_version.version }}">{{ row.package_version.package }}</a></td>
+    {% for package_installation in row.package_installations %}
+      <td style="background-color: {% if package_installation %}green{% else %}white{% endif %};">
+        {% if package_installation %}
+          +
+        {% else %}
+          &nbsp;
+        {% endif %}
+      </td>
+    {% endfor %}
+  </tr>
+  {% endfor %}
+  </ul>
+</table>
+
+{% endblock %}

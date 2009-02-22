@@ -3,6 +3,7 @@ from django.views.generic.list_detail import object_list
 # from django.views.generic.list_detail import object_detail
 from usable_solaris.packages.models import Machine
 from usable_solaris.packages.models import Package
+import usable_solaris.packages.views
 
 urlpatterns = patterns('',
     (r'^machines/$', 'django.views.generic.list_detail.object_list',
@@ -15,4 +16,5 @@ urlpatterns = patterns('',
     (r'^packages/(?P<object_id>[0-9]+)/$',
         'django.views.generic.list_detail.object_detail',
         { 'queryset': Package.objects.all()}),
+    (r'^matrix/$', 'usable_solaris.packages.views.matrix'),
 )

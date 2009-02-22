@@ -37,6 +37,8 @@ class Package(models.Model):
         return self.pkginst
     def get_absolute_url(self):
         return "/solaris/packages/%s/" % self.id
+    class Meta:
+        ordering = ['pkginst']
 
 
 class PackageVersion(models.Model):
@@ -44,6 +46,9 @@ class PackageVersion(models.Model):
     version = models.CharField(max_length=200)
     def __unicode__(self):
         return "%s-%s" % (self.package, self.version)
+    class Meta:
+        ordering = ['package', 'version']
+        unique_together = (('package', 'version'),)
 
 
 class Machine(models.Model):
@@ -52,7 +57,11 @@ class Machine(models.Model):
     def __unicode__(self):
         return self.fqdn
     def get_absolute_url(self):
-        return "/solaris/machines/%s" % self.id
+        return "/solaris/machines/%s/" % self.id
+    def short(self):
+        return unicode(self.fqdn).split(".")[0]
+    class Meta:
+        ordering = ['fqdn']
 
 
 class PackageInstallation(models.Model):
@@ -63,3 +72,6 @@ class PackageInstallation(models.Model):
     arch = models.CharField(max_length=32)
     def __unicode__(self):
         return "%s on %s" % (self.package_version, self.machine)
+    class Meta:
+        ordering = ['machine', 'package_version']
+        unique_together = (('package_version', 'machine'),)

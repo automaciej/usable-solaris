@@ -8,12 +8,12 @@ Machine detail:  {{ object }}
 <a href="../">Back to machine list</a>
 <h2>{{ object }}</h2>
   <ul>
-  {% for installed_package in object.packageinstallation_set.all %}
+  {% for package_installation in object.packageinstallation_set.all %}
   <li>
-    <a href="{{ installed_package.package_version.package.get_absolute_url }}">
-      {{ installed_package.package_version.package.pkginst }}
-    </a>
-    ({{ installed_package.package_version.package.name }})
+    <a href="{{ package_installation.package_version.package.get_absolute_url }}">
+      {{ package_installation.package_version.package.pkginst }}</a>
+    {% comment %}{{ package_installation.package_version.package.name }} {% endcomment %}
+    (installed on {{ package_installation.inst_date }})
   </li>
   {% endfor %}
 </ul>
