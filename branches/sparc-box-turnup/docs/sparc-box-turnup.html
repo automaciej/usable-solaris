@@ -1,0 +1,1184 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta name="generator" content="AsciiDoc 8.2.6" />
+<style type="text/css">
+/* Debug borders */
+p, li, dt, dd, div, pre, h1, h2, h3, h4, h5, h6 {
+/*
+  border: 1px solid red;
+*/
+}
+
+body {
+  margin: 1em 5% 1em 5%;
+}
+
+a {
+  color: blue;
+  text-decoration: underline;
+}
+a:visited {
+  color: fuchsia;
+}
+
+em {
+  font-style: italic;
+  color: navy;
+}
+
+strong {
+  font-weight: bold;
+  color: #083194;
+}
+
+tt {
+  color: navy;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #527bbd;
+  font-family: sans-serif;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  line-height: 1.3;
+}
+
+h1, h2, h3 {
+  border-bottom: 2px solid silver;
+}
+h2 {
+  padding-top: 0.5em;
+}
+h3 {
+  float: left;
+}
+h3 + * {
+  clear: left;
+}
+
+div.sectionbody {
+  font-family: serif;
+  margin-left: 0;
+}
+
+hr {
+  border: 1px solid silver;
+}
+
+p {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+ul, ol, li > p {
+  margin-top: 0;
+}
+
+pre {
+  padding: 0;
+  margin: 0;
+}
+
+span#author {
+  color: #527bbd;
+  font-family: sans-serif;
+  font-weight: bold;
+  font-size: 1.1em;
+}
+span#email {
+}
+span#revision {
+  font-family: sans-serif;
+}
+
+div#footer {
+  font-family: sans-serif;
+  font-size: small;
+  border-top: 2px solid silver;
+  padding-top: 0.5em;
+  margin-top: 4.0em;
+}
+div#footer-text {
+  float: left;
+  padding-bottom: 0.5em;
+}
+div#footer-badges {
+  float: right;
+  padding-bottom: 0.5em;
+}
+
+div#preamble,
+div.tableblock, div.imageblock, div.exampleblock, div.verseblock,
+div.quoteblock, div.literalblock, div.listingblock, div.sidebarblock,
+div.admonitionblock {
+  margin-right: 10%;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+}
+div.admonitionblock {
+  margin-top: 2.5em;
+  margin-bottom: 2.5em;
+}
+
+div.content { /* Block element content. */
+  padding: 0;
+}
+
+/* Block element titles. */
+div.title, caption.title {
+  color: #527bbd;
+  font-family: sans-serif;
+  font-weight: bold;
+  text-align: left;
+  margin-top: 1.0em;
+  margin-bottom: 0.5em;
+}
+div.title + * {
+  margin-top: 0;
+}
+
+td div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content div.title:first-child {
+  margin-top: 0.0em;
+}
+div.content + div.title {
+  margin-top: 0.0em;
+}
+
+div.sidebarblock > div.content {
+  background: #ffffee;
+  border: 1px solid silver;
+  padding: 0.5em;
+}
+
+div.listingblock {
+  margin-right: 0%;
+}
+div.listingblock > div.content {
+  border: 1px solid silver;
+  background: #f4f4f4;
+  padding: 0.5em;
+}
+
+div.quoteblock > div.content {
+  padding-left: 2.0em;
+}
+
+div.attribution {
+  text-align: right;
+}
+div.verseblock + div.attribution {
+  text-align: left;
+}
+
+div.admonitionblock .icon {
+  vertical-align: top;
+  font-size: 1.1em;
+  font-weight: bold;
+  text-decoration: underline;
+  color: #527bbd;
+  padding-right: 0.5em;
+}
+div.admonitionblock td.content {
+  padding-left: 0.5em;
+  border-left: 2px solid silver;
+}
+
+div.exampleblock > div.content {
+  border-left: 2px solid silver;
+  padding: 0.5em;
+}
+
+div.verseblock div.content {
+  white-space: pre;
+}
+
+div.imageblock div.content { padding-left: 0; }
+div.imageblock img { border: 1px solid silver; }
+span.image img { border-style: none; }
+
+dl {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+dt {
+  margin-top: 0.5em;
+  margin-bottom: 0;
+  font-style: normal;
+}
+dd > *:first-child {
+  margin-top: 0.1em;
+}
+
+ul, ol {
+    list-style-position: outside;
+}
+div.olist > ol {
+  list-style-type: decimal;
+}
+div.olist2 > ol {
+  list-style-type: lower-alpha;
+}
+
+div.tableblock > table {
+  border: 3px solid #527bbd;
+}
+thead {
+  font-family: sans-serif;
+  font-weight: bold;
+}
+tfoot {
+  font-weight: bold;
+}
+
+div.hlist {
+  margin-top: 0.8em;
+  margin-bottom: 0.8em;
+}
+div.hlist td {
+  padding-bottom: 15px;
+}
+td.hlist1 {
+  vertical-align: top;
+  font-style: normal;
+  padding-right: 0.8em;
+}
+td.hlist2 {
+  vertical-align: top;
+}
+
+@media print {
+  div#footer-badges { display: none; }
+}
+
+div#toctitle {
+  color: #527bbd;
+  font-family: sans-serif;
+  font-size: 1.1em;
+  font-weight: bold;
+  margin-top: 1.0em;
+  margin-bottom: 0.1em;
+}
+
+div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+div.toclevel2 {
+  margin-left: 2em;
+  font-size: 0.9em;
+}
+div.toclevel3 {
+  margin-left: 4em;
+  font-size: 0.9em;
+}
+div.toclevel4 {
+  margin-left: 6em;
+  font-size: 0.9em;
+}
+/* Workarounds for IE6's broken and incomplete CSS2. */
+
+div.sidebar-content {
+  background: #ffffee;
+  border: 1px solid silver;
+  padding: 0.5em;
+}
+div.sidebar-title, div.image-title {
+  color: #527bbd;
+  font-family: sans-serif;
+  font-weight: bold;
+  margin-top: 0.0em;
+  margin-bottom: 0.5em;
+}
+
+div.listingblock div.content {
+  border: 1px solid silver;
+  background: #f4f4f4;
+  padding: 0.5em;
+}
+
+div.quoteblock-content {
+  padding-left: 2.0em;
+}
+
+div.exampleblock-content {
+  border-left: 2px solid silver;
+  padding-left: 0.5em;
+}
+
+/* IE6 sets dynamically generated links as visited. */
+div#toc a:visited { color: blue; }
+
+/* Because IE6 child selector is broken. */
+div.olist2 ol {
+  list-style-type: lower-alpha;
+}
+div.olist2 div.olist ol {
+  list-style-type: decimal;
+}
+</style>
+<script type="text/javascript">
+/*<![CDATA[*/
+window.onload = function(){generateToc(2)}
+/* Author: Mihai Bazon, September 2002
+ * http://students.infoiasi.ro/~mishoo
+ *
+ * Table Of Content generator
+ * Version: 0.4
+ *
+ * Feel free to use this script under the terms of the GNU General Public
+ * License, as long as you do not remove or alter this notice.
+ */
+
+ /* modified by Troy D. Hanson, September 2006. License: GPL */
+ /* modified by Stuart Rackham, October 2006. License: GPL */
+
+function getText(el) {
+  var text = "";
+  for (var i = el.firstChild; i != null; i = i.nextSibling) {
+    if (i.nodeType == 3 /* Node.TEXT_NODE */) // IE doesn't speak constants.
+      text += i.data;
+    else if (i.firstChild != null)
+      text += getText(i);
+  }
+  return text;
+}
+
+function TocEntry(el, text, toclevel) {
+  this.element = el;
+  this.text = text;
+  this.toclevel = toclevel;
+}
+
+function tocEntries(el, toclevels) {
+  var result = new Array;
+  var re = new RegExp('[hH]([2-'+(toclevels+1)+'])');
+  // Function that scans the DOM tree for header elements (the DOM2
+  // nodeIterator API would be a better technique but not supported by all
+  // browsers).
+  var iterate = function (el) {
+    for (var i = el.firstChild; i != null; i = i.nextSibling) {
+      if (i.nodeType == 1 /* Node.ELEMENT_NODE */) {
+        var mo = re.exec(i.tagName)
+        if (mo)
+          result[result.length] = new TocEntry(i, getText(i), mo[1]-1);
+        iterate(i);
+      }
+    }
+  }
+  iterate(el);
+  return result;
+}
+
+// This function does the work. toclevels = 1..4.
+function generateToc(toclevels) {
+  var toc = document.getElementById("toc");
+  var entries = tocEntries(document.getElementsByTagName("body")[0], toclevels);
+  for (var i = 0; i < entries.length; ++i) {
+    var entry = entries[i];
+    if (entry.element.id == "")
+      entry.element.id = "toc" + i;
+    var a = document.createElement("a");
+    a.href = "#" + entry.element.id;
+    a.appendChild(document.createTextNode(entry.text));
+    var div = document.createElement("div");
+    div.appendChild(a);
+    div.className = "toclevel" + entry.toclevel;
+    toc.appendChild(div);
+  }
+  if (entries.length == 0)
+    document.getElementById("header").removeChild(toc);
+}
+/*]]>*/
+</script>
+<title>Turning up a sparc box</title>
+</head>
+<body>
+<div id="header">
+<h1>Turning up a sparc box</h1>
+<span id="author">Maciej Bliziński</span><br />
+<span id="revision">version 9,</span>
+2009-02-15
+<div id="toc">
+  <div id="toctitle">Table of Contents</div>
+  <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
+</div>
+</div>
+<div id="preamble">
+<div class="sectionbody">
+<div class="para"><p>So, you've got this sparc machine you're planning to play with, right?</p></div>
+<div class="para"><p>Has it got any CD-ROM? No? Uh oh, you'll need to do some fiddling to get the OS
+there.  Your best bet is the network.  I assume you already have an x86 box, and
+your network layout looks similar to this one:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>+----------+                        +------------+
+| x86 box ------(192.168.1.0/24)------ sparc-box |
++----------+                        +------------+</tt></pre>
+</div></div>
+</div>
+</div>
+<h2 id="_serial_port">1. Serial port</h2>
+<div class="sectionbody">
+<div class="para"><p>First, you will need to get access to your sparc machine via a serial port. If
+it is a Netra (as mine happens to be), you may need to craft your own special
+serial cable (see links at the bottom). Otherwise, a standard cable such as
+those used with Cisco routers will do. You'll probably use an USB serial
+adapter. You'll have a two-path connection to the sparc box.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>+-(x86 box)------+                               +-(sparc box)-------+
+|                |                               |                   |
+|         [eth0] |                               | [hme0]            |
+|              [RJ45] ----(192.168.1.0/24)---- [RJ45]                |
+|                |                               |                   |
+| [/dev/ttyUSB0] |                               | [/dev/ttya]       |
+|              [USB] -----(serial cable)------ [serial port]         |
++----------------+                               +-------------------+</tt></pre>
+</div></div>
+<div class="para"><p>After you connect the USB serial adapter, you should see a new device:
+<tt>/dev/ttyUSB0</tt>. You can connect to it using minicom, which is a popular serial
+communication program, but you can as well use GNU screen.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>stty -F /dev/ttyUSB0 9600
+screen /dev/ttyUSB0</tt></pre>
+</div></div>
+<div class="para"><p>At first, you'll see an empty screen. Tap ENTER and you should see something
+like this:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>lom&gt; █</tt></pre>
+</div></div>
+<div class="para"><p>LOM, the Ligths Out Manager, has a simple command-line interface. Type <tt>help</tt> to
+learn more about its functionality.</p></div>
+</div>
+<h2 id="_jumpstart_overview">2. JumpStart overview</h2>
+<div class="sectionbody">
+<div class="para"><p>To get Solaris installed on your sparc box, you need to use something called
+JumpStart, or JumpStart Enterprise Toolkit, referred to as JET. It runs on&#8230;
+Solaris! Haven't we got a chicken and egg problem here? Well, yes, we have.</p></div>
+<div class="para"><p>One way around it would be to install Solaris off a DVD on a physical x86 box
+and then use it to install Solaris over the network. I didn't have an extra x86
+box laying around, so I decided to install Solaris on a virtual machine.</p></div>
+<div class="para"><p>Alternatively, you could get to understand how JumpStart works and set it up on
+GNU/Linux. JumpStart is really a collection of RARP, BOOTP, TFTP and NFS stuff,
+there's nothing preventing you from setting them all up. However, I think that
+installing Solaris and using JET has a much more flat learning curve.</p></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">Sun like to distort the common symbol for Intel architecture, <tt>x86</tt>.  You
+may see capitalized <tt>X86</tt> or <tt>i86pc</tt> (huh?). I have no idea why is that. I'll
+keep calling it the usual way: <tt>x86</tt>.</td>
+</tr></table>
+</div>
+<div class="para"><p>If we're going the virtual machine route, the diagram will look more like this:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>+-(x86 box)------------------+                         +-(sparc box)-----------+
+|                            |                         |                       |
+| GNU/Linux                  |                         | (No OS yet)           |
+|                            |                         |                       |
+| +-(virtual machine)--+     |                         |                       |
+| |                    |     |                         |                       |
+| | Solaris            |     |                         |                       |
+| |             [e1000g0]-+  |                         |                       |
+| |                    |  |  |                         |                       |
+| +--------------------+  |  |                         |                       |
+|                         |  |                         |                       |
+|                    [vbox0] |                         |                       |
+|                         |  |                         |                       |
+|                [br0]----+  |                         |                       |
+|                         |  |                         |                       |
+|                     [eth0] |                         | [hme0]                |
+|                        [RJ45] --(192.168.1.0/24)-- [RJ45]                    |
+|                            |                         |                       |
+|             [/dev/ttyUSB0] |                         | [/dev/ttya]           |
+|                         [USB] ---(serial cable)--- [serial port]             |
+|                            |                         |                       |
++----------------------------+                         +-----------------------+</tt></pre>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">Your virtual machine must be L2-adjacent to your sparc box. In other
+words, it must be in the same subnet (say, <tt>192.168.0.1/24</tt>). It's because
+JumpStart uses RARP, which cannot be routed.  For the same reason, you need to
+use bridged networking for your virtual machine.  If you use NAT, RARP will not
+work.</td>
+</tr></table>
+</div>
+</div>
+<h2 id="_installing_virtualbox">3. Installing VirtualBox</h2>
+<div class="sectionbody">
+<div class="para"><p>I tried running Solaris with few different hypervisors. I got it sort of
+installed on kvm, but it didn't really want to run.  My best experiences were
+with VirtualBox, which is now a Sun product, so it's important for them, for
+political reasons I guess, that it runs Solaris smoothly. Browse the source
+code and look into the <tt>scripts/vbox</tt> directory.</p></div>
+<div class="para"><p>VirtualBox website has instructions on how to install VirtualBox; they provide
+Ubuntu package repository, which you can add to your <tt>/etc/apt/sources.list</tt>.</p></div>
+<div class="para"><p>Their instructions miss one piece of information: to install kernel modules,
+you'll need an additional package:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>sudo aptitude install linux-headers-$(uname -r)</tt></pre>
+</div></div>
+</div>
+<h2 id="_installing_solaris">4. Installing Solaris</h2>
+<div class="sectionbody">
+<div class="para"><p>I won't go into much detail of how to install Solaris on a virtual machine. Just
+a couple of hints.</p></div>
+<div class="ilist"><ul>
+<li>
+<p>
+If you're installing VirtualBox on Ubuntu, you'll need to install additional
+  packages to build kernel modules for VirtualBox.
+</p>
+</li>
+<li>
+<p>
+I recommend installing a <em>whole distribution</em>, even though it takes 5GB and
+  installs tons of stuff you won't use. It would be good to avoid installing X,
+  KDE and the like, but if you choose any smaller set of packages, you won't
+  have even bash. Ouch.
+</p>
+</li>
+<li>
+<p>
+Give your virtual machine 16GB of disk at minimum. You will want to cram some
+  DVD images on it, plus their extracted form. Of course, you can always create
+  an additional disk and attach it afterwards, but it's better to save hassle.
+</p>
+</li>
+<li>
+<p>
+After Solaris is installed, you get a shiny blue Sun-branded graphical login.
+  Don't be tempted to use it! Just to tip you off, <tt>root</tt> user home directory is
+  by default <tt>/</tt> (the root directory), and the default desktop environment is
+  Gnome. Imagine how much stuff on your system root would be created if you
+  logged in.  Instead, click <em>Options</em> near the bottom of the login window, and
+  choose <em>Command Line Login</em>.
+</p>
+</li>
+</ul></div>
+<div class="para"><p>At this point, I'll happily assume you can log in as root, and you see something
+like this:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>Sun Microsystems Inc.   SunOS 5.10      Generic January 2005
+# █</tt></pre>
+</div></div>
+<div class="para"><p>I imagine that you already started typing stuff, and your screen looks now more
+like this:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>Sun Microsystems Inc.   SunOS 5.10      Generic January 2005
+# ps ax
+usage: ps [ -aAdeflcjLPyZ ] [ -o format ] [ -t termlist ]
+        [ -u userlist ] [ -U userlist ] [ -G grouplist ]
+        [ -p proclist ] [ -g pgrplist ] [ -s sidlist ] [ -z zonelist ]
+  'format' is one or more of:
+        user ruser group rgroup uid ruid gid rgid pid ppid pgid sid taskid ctid
+        pri opri pcpu pmem vsz rss osz nice class time etime stime zone zoneid
+        f s c lwp nlwp psr tty addr wchan fname comm args projid project pset
+# vim /etc/fstab
+vim: not found
+# vi /etc/fstab
+screen: Unknown terminal type
+I don't know what kind of terminal you are on - all I have is 'screen'.
+[Using open mode]
+"/etc/fstab" [New file]
+:q
+# grep -q root /etc/passwd
+grep: illegal option -- q
+Usage: grep -hblcnsviw pattern file . . .
+# ^[[A
+^[[A: not found
+# █</tt></pre>
+</div></div>
+<div class="para"><p>There's some work you need to do before you can <em>actually</em> work, as opposed to
+just staring at a blinking cursor and thinking how awesome it is to have a real
+Unix running in front of you. (What does it mean anyway, a <em>real</em> Unix? I never
+figured that out.)</p></div>
+</div>
+<h2 id="_preliminary_setup">5. Preliminary setup</h2>
+<div class="sectionbody">
+<div class="para"><p>We won't be spending <em>too</em> much time on this, because it's only an intermediate
+system, but let's get a little more comfortable here.  The first thing I do
+after logging in, is starting bash.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt># bash
+bash-3.00# █</tt></pre>
+</div></div>
+<div class="para"><p>It's got sucky prompt by default, let's set it to something different.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>bash-3.00# PS1="\[\033[01;31m\]\h\[\033[01;34m\] \W \$\[\033[00m\] "
+root@vsol01 / # echo "PS1=\"$PS1\"" &gt;&gt; ~/.bashrc
+root@vsol01 / # █</tt></pre>
+</div></div>
+<div class="para"><p>That's better. Now, the first thing you most probably want to do, is getting
+a set of GNU tools. Here, I recommend using blastwave repository. Go to
+Blastwave website and follow instructions <em>How to use Blastwave</em>.</p></div>
+<div class="para"><p>If you want to do any editing in vi and you're using GNU screen, you need to set
+your TERM variable into something that bare Solaris understands:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>export TERM=xterm</tt></pre>
+</div></div>
+<div class="para"><p>Let's set up some things:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>echo &gt;&gt; /etc/opt/csw/pkgutil.conf \
+  "mirror=ftp://ftp.heanet.ie/mirrors/blastwave.org/unstable/"
+
+echo &gt;&gt; /etc/default/login \
+  "PATH=/bin:/sbin:/usr/sbin:/usr/bin:/opt/csw/sbin:/opt/csw/bin:\
+/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin"
+
+echo &gt;&gt; /etc/default/login \
+  "PATH=/bin:/sbin:/usr/sbin:/usr/bin:/opt/csw/sbin:/opt/csw/bin:\
+/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin"</tt></pre>
+</div></div>
+<div class="para"><p>Since we were setting up PATHs, you can logout and log back in.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>pkgutil --catalog</tt></pre>
+</div></div>
+<div class="para"><p>Now you can install all the software available from Blastwave. Some of my first
+choices:</p></div>
+<div class="ilist"><ul>
+<li>
+<p>
+vim
+</p>
+</li>
+<li>
+<p>
+elinks
+</p>
+</li>
+<li>
+<p>
+findutils (and running <tt>gupdatedb &amp;</tt>)
+</p>
+</li>
+<li>
+<p>
+gawk, ggrep, gsed, gtar
+</p>
+</li>
+<li>
+<p>
+wget, rsync
+</p>
+</li>
+<li>
+<p>
+sudo
+</p>
+</li>
+<li>
+<p>
+tree
+</p>
+</li>
+<li>
+<p>
+screen, mc
+</p>
+</li>
+</ul></div>
+</div>
+<h2 id="_installing_jet_jumpstart_enterprise_toolkit">6. Installing JET, JumpStart Enterprise Toolkit</h2>
+<div class="sectionbody">
+<div class="para"><p>Go to the JumpStart website, download the <tt>jet.pkg.bz2</tt> package and follow
+instructions. It's basically about installing the jet package, then copying
+Solaris media and configuring your client.</p></div>
+<div class="para"><p>Some stuff that isn't covered in JumpStart instructions:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>mkdir -p /export/install/{pkgs,patches}</tt></pre>
+</div></div>
+<div class="para"><p>Here's a command that I used to copy Solaris media (DVD):</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>copy_solaris_media -d /export/install/media/10_U6_SPARC -n 10_U6_SPARC \
+  -i /mnt/solaris-stuff sol-10-u6-ga1-sparc-dvd.iso</tt></pre>
+</div></div>
+<div class="para"><p>In my case, <tt>/mnt/solaris-stuff</tt> was an NFS share exported from GNU/Linux which
+I had trouble setting up and mounting. It's better to simply scp the ISO image
+to your Solaris system.</p></div>
+<div class="para"><p>If you however decide to mount a NFS share, it's probably exported from
+GNU/Linux, which means you'll run into a problem where you export NFS 3 from
+GNU/Linux, while Solaris client expects NFS 4. You'll be getting rather
+unhelpful error messages. Edit <tt>/etc/default/nfs</tt> on Solaris and set client max
+NFS version to 3. Then try mounting again.</p></div>
+<div class="para"><p>Make sure that <tt>/export/install</tt> is exported via NFS:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>share -o ro,anon=0 /export/install
+shareall</tt></pre>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">You can't have <tt>/export/install</tt> mounted via NFS. If you do, JET needs to
+export it and you can't export something that is a remote mount. You need to
+have it on a local disk.</td>
+</tr></table>
+</div>
+<h3 id="_what_is_a_template">6.1. What is a template</h3><div style="clear:left"></div>
+<div class="para"><p>A <em>template</em> in JET is not so much a template, at least from your perspective.
+It is a template in a sense, that it's used to generate configuration for
+jumpstart, the underlying technology, which is really a collection of RARP, TFTP
+and NFS stuff.</p></div>
+<div class="para"><p>It's best if you have your hostname configured in DNS and RevDNS. If your host
+is, say <tt>sparcbox</tt>, and <tt>sparcbox</tt> resolves in your DNS, JET will pick up the IP
+address and put it into the template.</p></div>
+<h3 id="_making_one">6.2. Making one</h3><div style="clear:left"></div>
+<div class="para"><p>Now, let's make it.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>cd /opt/SUNWjet/Templates
+make_template sparcbox base_config sds sbd custom zfs</tt></pre>
+</div></div>
+<h3 id="_editing_the_template">6.3. Editing the template</h3><div style="clear:left"></div>
+<div class="para"><p>Now, you can edit the file named <tt>sparcbox</tt> (or whatever is the name of your
+machine).</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>vim sparcbox</tt></pre>
+</div></div>
+<div class="para"><p>JumpStart templates have very good comments. Read through them and you'll get
+a good idea what to put where. I'll only point out more important bits and some
+gotchas.</p></div>
+<div class="para"><p>Bits you need to edit:</p></div>
+<h4 id="_architecture_type">6.3.1. Architecture type</h4>
+<div class="para"><p>Which architecture you need, can be looked up in comments. Mine was <tt>sun4u</tt>.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>base_config_ClientArch=sun4u
+base_config_ClientEther=XX.XX.XX.XX.XX.XX
+base_config_ClientOS=10_U6_SPARC</tt></pre>
+</div></div>
+<div class="para"><p>The <tt>10_U6_SPARC</tt> bit should match what was used in <tt>copy_solaris_media</tt>.</p></div>
+<h4 id="_jumpstart_sysidcfg_information">6.3.2. JumpStart sysidcfg information</h4>
+<div class="para"><p>When specifying <tt>base_config_sysidcfg_nameservice</tt>, you need to enclose the
+whole thing in quotes.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>base_config_sysidcfg_nameservice="DNS { domain_name=(...) }"</tt></pre>
+</div></div>
+<h4 id="_disk_labeling">6.3.3. Disk labeling</h4>
+<div class="listingblock">
+<div class="content">
+<pre><tt>base_config_label_disks="all"
+base_config_profile_fdisk="alldisk"</tt></pre>
+</div></div>
+<h4 id="_jumpstart_profile_information">6.3.4. JumpStart profile information</h4>
+<div class="para"><p><tt>SUNWCuser</tt> is selected by default. We won't need all that on the sparc box, and
+we'll learn how to pick and choose packages we want. <tt>SUNWCreq</tt> gives a much
+lighter OS base. (In a sense that it installs less packages.)</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>base_config_profile_cluster=SUNWCreq</tt></pre>
+</div></div>
+<h4 id="_disk_slices">6.3.5. Disk slices</h4>
+<div class="para"><p>We'll create two slices of equal size. I picked 4096MB, but you might want
+something smaller or bigger, depending on the size of your hard drive. The idea
+is that there are <em>root</em> and <em>alt root</em> partitions, both of equal size. They
+can be used later with Live Upgrade, which allows OS patching without going into
+single user mode and thus reducing system downtime.</p></div>
+<div class="para"><p>I'm not creating separate <tt>/usr</tt> or <tt>/var</tt> mountpoints, for simplicity.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>@@ -330,8 +330,8 @@
+
+ base_config_profile_dontuse=""
+
+-base_config_profile_root=free
+-base_config_profile_swap=2048
++base_config_profile_root=4096
++base_config_profile_swap=1024
+
+ #
+ # If you are using VxVM and want your boot disk to look like the mirror, then
+@@ -343,15 +343,15 @@
+ #
+
+ base_config_profile_s3_mtpt=""
+-base_config_profile_s3_size=""
++base_config_profile_s3_size="free"
+
+ base_config_profile_s4_mtpt=""
+ base_config_profile_s4_size=""
+
+-base_config_profile_s5_mtpt="/var"
+-base_config_profile_s5_size=""
++base_config_profile_s5_mtpt=""
++base_config_profile_s5_size="4096"
+
+-base_config_profile_s6_mtpt="/usr"
++base_config_profile_s6_mtpt=""
+ base_config_profile_s6_size=""
+
+ #
+@@ -360,7 +360,7 @@
+ # please avoid using s7 for data!
+ #
+
+-base_config_profile_s7_mtpt="/opt"
++base_config_profile_s7_mtpt=""
+ base_config_profile_s7_size=""
+ #
+ ############</tt></pre>
+</div></div>
+<h4 id="_additional_packages_and_clusters">6.3.6. Additional packages and clusters</h4>
+<div class="listingblock">
+<div class="content">
+<pre><tt>base_config_profile_add_packages="SUNWman SUNWless SUNWdoc SUNWtoo SUNWrcmdc"
+base_config_profile_add_clusters="SUNWCfwshl SUNWCssh SUNWCipf SUNWCacc
+SUNWCadm SUNWCkrb5 SUNWCnfsc SUNWCnfss SUNWCmpapi SUNWCdtrace SUNWCvld
+SUNWCdhcp SUNWCgcc SUNWCjv SUNWCjvx SUNWClu SUNWCnca SUNWCbdb SUNWCcpc
+SUNWCmd SUNWCmda SUNWCmco SUNWCopenssl SUNWCsmba SUNWCutf8 SUNWCwbem
+SUNWCwget SUNWCzfs SUNWCzone SUNWCpool"</tt></pre>
+</div></div>
+<div class="para"><p>Strings spanning multiple lines will work fine.</p></div>
+<h4 id="_sds_8212_disk_mirror">6.3.7. SDS &#8212; disk mirror</h4>
+<div class="para"><p>JumpStart can allow to create a mirrored root in a very easy way. All you need
+is two disks of the same size and knowing which one is going to be the mirror.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>@@ -818,7 +849,7 @@
+ # partitions for you, but you will have to populate the sds_database_*
+ # variables if you want a metadb to exist on the root mirror.
+ #
+-sds_root_mirror=""
++sds_root_mirror="c0t1d0"
+ # You MUST set fmthard=yes for Solaris 9 and above.
+ sds_use_fmthard="yes"</tt></pre>
+</div></div>
+<div class="para"><p><em>(In my case, the mirror had to be <tt>c0t0d0</tt>, as <tt>c0t1d0</tt> was the primary disk.)</em></p></div>
+<div class="para"><p>It's perfectly save to skip this part during the first install and figure out
+which disk is which on a live system. Then you can go back to this place and
+enter the name of the mirror disk.</p></div>
+<h3 id="_make_client">6.4. make_client</h3><div style="clear:left"></div>
+<div class="para"><p>When your template is ready, you can <tt>make_client</tt>, which means that JET scripts
+will pick up stuff that you enclosed in the template and configure JumpStart.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>make_client sparcbox</tt></pre>
+</div></div>
+<div class="para"><p><em>If you run it multiple times, you need to add the <tt>-f</tt> flag.</em></p></div>
+<div class="para"><p>If this command fails you'll notice it quite easily, as it printd a huge banner
+with the word <em>FAILED</em>. Apart from the banner, it prints useful error messages.</p></div>
+<h3 id="_launching_the_installation">6.5. Launching the installation</h3><div style="clear:left"></div>
+<div class="para"><p>You need to get to the Open Boot Prom, or OBP. You can tell that you're there
+when you're seeing an <tt>ok</tt> prompt, like this:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>ok █</tt></pre>
+</div></div>
+<div class="para"><p>Or, sometimes, like this:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>{0} ok █</tt></pre>
+</div></div>
+<div class="para"><p>How to get it? This can be tricky if you don't know Sun hardware. Sun machines
+like to have tiny computers in top of them, called Lights Out Managers (LOM).
+These guys allow you to manage your box even if it's powered off. Well, the
+power cable has to be connected, but that's enough.</p></div>
+<div class="para"><p>TODO: Elaborate on LOM and OBP.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>boot net - install</tt></pre>
+</div></div>
+<div class="para"><p>What's happening now, in essence, is:</p></div>
+<div class="ilist"><ul>
+<li>
+<p>
+your machine makes a RARP request to get an IP address
+</p>
+</li>
+<li>
+<p>
+then it uses tftp to download Solaris kernel from the jumpstart server
+</p>
+</li>
+<li>
+<p>
+kernel boots up and mounts root via NFS from the jumpstart server
+</p>
+</li>
+<li>
+<p>
+installation scripts download packages, create file systems and all that stuff
+</p>
+</li>
+</ul></div>
+<div class="para"><p>This step should be entirely automatic. From <tt>boot net - install</tt>, you should go
+straight to the <tt>login:</tt> prompt. If you're being asked installation questions
+such as network configuration or time, something's missing from your jumpstart
+template. You still <em>can</em> get your machine installed that way, it's just not
+fully automatic. Go back to the template and try to find settings relevant to
+the questions you've been asked. A common problem is that the sparc box couldn't
+find the NTP server.</p></div>
+<div class="para"><p>When installation is complete, you'll see something like this:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>JumpStart is complete @ Monday  9 February 2009 08:51:40 GMT
+sparcbox console login: █</tt></pre>
+</div></div>
+<div class="para"><p>Congratulations! You've got Solaris installed! You can now play around and see
+how sparc hardware is different from x86. Look at commands beginning with <tt>prt</tt>,
+as they print out various bits of information.</p></div>
+<div class="para"><p>Ah, wait, the root password. Right. It's:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>newroot</tt></pre>
+</div></div>
+<div class="para"><p>It's JumpStart's default. Go ahead and change it.</p></div>
+<div class="para"><p>This is just the first iteration of JumpStart install. You will probably want to
+change some things in the template and reinstall your machine, and keep
+repeating that until you're satisfied.</p></div>
+<div class="para"><p>If you want to reinstall your sparc box and you're in the shell (as opposed to
+OBP), you could reboot, or send a <tt>break</tt> to the system, but there's a simpler
+way:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>root@netra / # reboot -- net - install</tt></pre>
+</div></div>
+<h3 id="_when_a_command_is_missing">6.6. When a command is missing</h3><div style="clear:left"></div>
+<div class="para"><p>You may see that a command you had on the JumpStart server isn't there on your
+sparc box.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>root@netra / # less
+bash: less: command not found</tt></pre>
+</div></div>
+<div class="para"><p>Go to the JumpStart server, find out where's your binary and which package does
+it belong to.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>root@vsol01 / # which less
+/usr/bin/less
+root@vsol01 / # pkgchk -l -p /usr/bin/less
+Pathname: /usr/bin/less
+Type: regular file
+Expected mode: 0555
+Expected owner: root
+Expected group: bin
+Expected file size (bytes): 101412
+Expected sum(1) of contents: 5918
+Expected last modification: Jan 23 02:23:38 2005
+Referenced by the following packages:
+        SUNWless
+Current status: installed</tt></pre>
+</div></div>
+<div class="para"><p>Here, we have found that the <tt>less</tt> command comes from <tt>SUNWless</tt> package. You
+can go to the JumpStart template and add <tt>SUNWless</tt> to the
+<tt>base_config_profile_add_packages</tt> list.</p></div>
+<h3 id="_incorporating_csw_a_k_a_blastwave_into_jumpstart">6.7. Incorporating CSW (a.k.a. Blastwave) into JumpStart</h3><div style="clear:left"></div>
+<div class="para"><p>When we're talking about making Solaris usable, we're not talking about the
+temporary, virtual one, we're talking about the one you're installing on the
+sparc box.</p></div>
+<div class="para"><p>One of the steps will be installing the <em>useful</em> software, stuff that is
+available from CSW. Generally, we know how to install it, but what we really
+want here, is having it installed as part of JumpStart procedure.</p></div>
+<div class="para"><p>First we need to figure the list of packages that we want, with dependencies.
+The easiest way to go at this, will consist of first installing all the CSW
+packages we want on the our JumpStart server. Read what's there, and note down
+which packages interest you. Of course, you can install them as well.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>pkgutil --available | less
+pkgutil --install package_name</tt></pre>
+</div></div>
+<div class="para"><p><tt>pkgutil</tt> will figure out and install all the dependencies. After you're done,
+you can see the full list of CSW packages that have been installed.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>pkginfo | gawk '$2 ~ /^CSW/ { print $2 }'</tt></pre>
+</div></div>
+<div class="para"><p><tt>pkgutil</tt> is able to create a <em>package stream</em> with all the dependencies in it.
+Here, we want to build package for sparc platform, even though we're working on
+an x86 right now.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>pkgutil -s --target=sparc:5.10 -o cswstuff.sparc.5.10.pkg \
+  bash_completion elinks fileutils findutils gawk ggrep gsed gtar gzip less \
+  mc ncftp netcat pstree readline rsync screen shutils sudo tree \
+  unarj unrar unzip vim w3m wget zsh pkgutil puppet</tt></pre>
+</div></div>
+<div class="para"><p>You may see a message like this:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>MD5 for CSWosslrt doesn't match catalog!
+at /opt/csw/bin/pkgutil line 676, &lt;STDIN&gt; line 1.`</tt></pre>
+</div></div>
+<div class="para"><p>It is usually triggered by incomplete file in <tt>/var/opt/csw/pkgutil/packages</tt>.
+Locate which file it was and delete it.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>rm /var/opt/csw/pkgutil/packages/openssl_rt-0.9.8\,REV\=2007.12.26_rev\=g-SunOS5.8-sparc-CSW.pkg.gz</tt></pre>
+</div></div>
+<div class="para"><p>After pkgutil is finished, it will print a “dependency safe order” in which you
+can install those packages. You don't have to write it down, JumpStart will take
+care of the installation order. Let's find the package stream now. What is
+a package stream? It's a form of an archive (similar to tar), which can contain
+multiple packages. Packages can also come in “directory format”, which means
+that a package is a directory with files in it. JumpStart wants packages in
+directory format, we got a package stream. Conversion is needed.</p></div>
+<div class="para"><p>Look into <tt>/var/opt/csw/pkgutil/packages</tt> and find your file:
+<tt>cswstuff.sparc.5.10.pkg</tt>. The destination directory will be
+<tt>/export/install/pkgs/custom/sparc</tt>.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>mkdir -p /export/install/pkgs/custom/sparc
+pkgtrans /var/opt/csw/pkgutil/packages/cswstuff.sparc.5.10.pkg \
+  /export/install/pkgs/custom/sparc all
+ls -l /export/install/pkgs/custom/sparc</tt></pre>
+</div></div>
+<div class="para"><p>Now, edit JumpStart template for your host and add all those CSW package names
+to a variable named <tt>custom_packages</tt>.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>custom_packages="
+CSWaspell
+CSWbashcmplt
+CSWbdb3
+CSWbzip2
+...
+CSWzlib
+CSWzsh
+"</tt></pre>
+</div></div>
+<div class="para"><p>Make sure that the word <tt>custom</tt> is included in <tt>base_config_products</tt>.
+Otherwise your custom packages won't be installed at all.</p></div>
+</div>
+<h2 id="_adding_custom_scripts">7. Adding custom scripts</h2>
+<div class="sectionbody">
+<div class="para"><p>Some tasks that we would like to do after installation, can be automated.</p></div>
+<div class="ilist"><ul>
+<li>
+<p>
+Setting root home directory to <tt>/root</tt>
+</p>
+</li>
+<li>
+<p>
+Setting a better prompt
+</p>
+</li>
+<li>
+<p>
+Setting default paths
+</p>
+</li>
+<li>
+<p>
+Importing blastwave gpg key
+</p>
+</li>
+<li>
+<p>
+Configuring pkgutil
+</p>
+</li>
+</ul></div>
+<div class="para"><p>TODO: Write scripts.</p></div>
+</div>
+<h2 id="_random_stuff">8. Random stuff</h2>
+<div class="sectionbody">
+<h3 id="_mac_addresses">8.1. Mac addresses</h3><div style="clear:left"></div>
+<div class="para"><p>If your box has more network interfaces, you might find (type <tt>ifconfig -a</tt>)
+that all your interfaces have the same MAC address. You can change that by
+setting a <tt>local-mac-address?</tt> setting with <tt>eeprom</tt> command.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>sparcbox / $ eeprom local-mac-address?
+local-mac-address?=false
+sparcbox / $ eeprom local-mac-address?=true
+sparcbox / $ eeprom local-mac-address?
+local-mac-address?=true</tt></pre>
+</div></div>
+</div>
+<h2 id="_contact">9. Contact</h2>
+<div class="sectionbody">
+<div class="para"><p>Comments and suggestions are greatly appreciated. Especially, if a bit of
+information was missing and it took you time to figure it out, let me know what
+it was, for the sake of future generations.  Please use the following address:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>python -c "print 'bWFjaWVqLmJsaXppbnNraUBnbWFpbC5jb20=\n'.decode('base64')"</tt></pre>
+</div></div>
+</div>
+<h2 id="_references">10. References</h2>
+<div class="sectionbody">
+<div class="ilist"><ul>
+<li>
+<p>
+<a href="http://www.sun.com/software/solaris/">Solaris Operating System</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://www.blastwave.org/">Blastwave</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://www.virtualbox.org/">VirtualBox</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://www.sun.com/bigadmin/content/jet/">JumpStart</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://www.sun.com/software/security/jass/">SUNWjass</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://www.sun.com/service/stb/index.jsp">Explorer</a>
+</p>
+</li>
+<li>
+<p>
+<a href="http://devin.com/debian/debian-on-netra.html">Installing Debian on Netra T1</a>
+  (serial cable pinout table)
+</p>
+</li>
+<li>
+<p>
+<a href="http://tinyurl.com/9t249">Creating Solaris packages</a>
+</p>
+</li>
+</ul></div>
+</div>
+<div id="footer">
+<div id="footer-text">
+Version 9<br />
+Last updated 2009-02-22 15:11:43 IST
+</div>
+</div>
+</body>
+</html>

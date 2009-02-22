@@ -10,7 +10,9 @@ there.  Your best bet is the network.  I assume you already have an x86 box, and
 your network layout looks similar to this one:
 
 --------------------------------------------------------------------------------
-x86-box ------(192.168.1.0/24)------ sparc-box
++----------+                        +------------+
+| x86 box ------(192.168.1.0/24)------ sparc-box |
++----------+                        +------------+
 --------------------------------------------------------------------------------
 
 Serial port
@@ -69,57 +71,79 @@ GNU/Linux. JumpStart is really a collection of RARP, BOOTP, TFTP and NFS stuff,
 there's nothing preventing you from setting them all up. However, I think that
 installing Solaris and using JET has a much more flat learning curve.
 
-NOTE: Sun like to distort the common symbol for Intel architecture, `x86`.
-You may see `X86` or other weird things, like `i86pc`. I have no idea why is
-that. I'll keep calling it `x86`.
+NOTE: Sun like to distort the common symbol for Intel architecture, `x86`.  You
+may see capitalized `X86` or `i86pc` (huh?). I have no idea why is that. I'll
+keep calling it the usual way: `x86`.
 
 If we're going the virtual machine route, the diagram will look more like this:
 
 --------------------------------------------------------------------------------
-+-(x86 box)------------------+                         +-(sparc box)-------+
-|                            |                         |                   |
-| GNU/Linux                  |                         | (No OS yet)       |
-|                            |                         |                   |
-| +-(virtual machine)--+     |                         |                   |
-| |                    |     |                         |                   |
-| | Solaris            |     |                         |                   |
-| |             [e1000g0]-+  |                         |                   |
-| |                    |  |  |                         |                   |
-| +--------------------+  |  |                         |                   |
-|                         |  |                         |                   |
-|                 [eth0]--+  |                         |                   |
-|                         |  |                         |                   |
-|                      [br0] |                         | [e1000g0]         |
-|	                 [RJ45] --(192.168.1.0/24)-- [RJ45]                |
-|                            |                         |                   |
-|             [/dev/ttyUSB0] |                         | [/dev/ttya]       |
-|                         [USB] ---(serial cable)--- [serial port]         |
-|                            |                         |                   |
-+----------------------------+                         +-------------------+
++-(x86 box)------------------+                         +-(sparc box)-----------+
+|                            |                         |                       |
+| GNU/Linux                  |                         | (No OS yet)           |
+|                            |                         |                       |
+| +-(virtual machine)--+     |                         |                       |
+| |                    |     |                         |                       |
+| | Solaris            |     |                         |                       |
+| |             [e1000g0]-+  |                         |                       |
+| |                    |  |  |                         |                       |
+| +--------------------+  |  |                         |                       |
+|                         |  |                         |                       |
+|                    [vbox0] |                         |                       |
+|                         |  |                         |                       |
+|                [br0]----+  |                         |                       |
+|                         |  |                         |                       |
+|                     [eth0] |                         | [hme0]                |
+|	                 [RJ45] --(192.168.1.0/24)-- [RJ45]                    |
+|                            |                         |                       |
+|             [/dev/ttyUSB0] |                         | [/dev/ttya]           |
+|                         [USB] ---(serial cable)--- [serial port]             |
+|                            |                         |                       |
++----------------------------+                         +-----------------------+
 --------------------------------------------------------------------------------
 
-I tried running Solaris on few virtual machines. I got it sort of installed on
-kvm, but it didn't really want to run.  My best experiences were with
-VirtualBox, which is now a Sun product, so it's important for them, for
-political reasons I guess, that it runs Solaris smoothly. Browse the source
-code, look into the `scripts/vbox` directory.
-
-NOTE: Your virtual machine _must_ be L2-adjacent to your sparc box. In other
+NOTE: Your virtual machine must be L2-adjacent to your sparc box. In other
 words, it must be in the same subnet (say, `192.168.0.1/24`). It's because
 JumpStart uses RARP, which cannot be routed.  For the same reason, you need to
-use bridged networking of your virtual machine.  If you use NAT, RARP will not
+use bridged networking for your virtual machine.  If you use NAT, RARP will not
 work.
+
+
+Installing VirtualBox
+---------------------
+
+I tried running Solaris with few different hypervisors. I got it sort of
+installed on kvm, but it didn't really want to run.  My best experiences were
+with VirtualBox, which is now a Sun product, so it's important for them, for
+political reasons I guess, that it runs Solaris smoothly. Browse the source
+code and look into the `scripts/vbox` directory.
+
+VirtualBox website has instructions on how to install VirtualBox; they provide
+Ubuntu package repository, which you can add to your `/etc/apt/sources.list`.
+
+Their instructions miss one piece of information: to install kernel modules,
+you'll need an additional package:
+
+--------------------------------------------------------------------------------
+sudo aptitude install linux-headers-$(uname -r)
+--------------------------------------------------------------------------------
+
+
+Installing Solaris
+------------------
 
 I won't go into much detail of how to install Solaris on a virtual machine. Just
 a couple of hints.
 
+* If you're installing VirtualBox on Ubuntu, you'll need to install additional
+  packages to build kernel modules for VirtualBox.
 * I recommend installing a 'whole distribution', even though it takes 5GB and
   installs tons of stuff you won't use. It would be good to avoid installing X,
   KDE and the like, but if you choose any smaller set of packages, you won't
   have even bash. Ouch.
-* Give your virtual machine about 16GB of disk. You will want to cram some DVD
-  images on it, plus their extracted form. You can always create an additional
-  disk and attach it afterwards, but it's better to save hassle.
+* Give your virtual machine 16GB of disk at minimum. You will want to cram some
+  DVD images on it, plus their extracted form. Of course, you can always create
+  an additional disk and attach it afterwards, but it's better to save hassle.
 * After Solaris is installed, you get a shiny blue Sun-branded graphical login.
   Don't be tempted to use it! Just to tip you off, `root` user home directory is
   by default `/` (the root directory), and the default desktop environment is
@@ -164,10 +188,11 @@ Usage: grep -hblcnsviw pattern file . . .
 # █
 --------------------------------------------------------------------------------
 
-There's some work you need to do before you can do stuff. Like, _actually_ work,
-as opposed to just staring at a blinking cursor and thinking how awesome it is
-to have a real Unix running in front of you. (What does it mean anyway, a _real_
-Unix? I never figured that out.)
+There's some work you need to do before you can _actually_ work, as opposed to
+just staring at a blinking cursor and thinking how awesome it is to have a real
+Unix running in front of you. (What does it mean anyway, a _real_ Unix? I never
+figured that out.)
+
 
 Preliminary setup
 -----------------
@@ -368,6 +393,14 @@ base_config_profile_cluster=SUNWCreq
 Disk slices
 ^^^^^^^^^^^
 
+We'll create two slices of equal size. I picked 4096MB, but you might want
+something smaller or bigger, depending on the size of your hard drive. The idea
+is that there are 'root' and 'alt root' partitions, both of equal size. They
+can be used later with Live Upgrade, which allows OS patching without going into
+single user mode and thus reducing system downtime.
+
+I'm not creating separate `/usr` or `/var` mountpoints, for simplicity.
+
 --------------------------------------------------------------------------------
 @@ -330,8 +330,8 @@
 
@@ -414,7 +447,7 @@ Disk slices
 Additional packages and clusters
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 --------------------------------------------------------------------------------
-base_config_profile_add_packages="SUNWman SUNWless"
+base_config_profile_add_packages="SUNWman SUNWless SUNWdoc SUNWtoo SUNWrcmdc"
 base_config_profile_add_clusters="SUNWCfwshl SUNWCssh SUNWCipf SUNWCacc
 SUNWCadm SUNWCkrb5 SUNWCnfsc SUNWCnfss SUNWCmpapi SUNWCdtrace SUNWCvld
 SUNWCdhcp SUNWCgcc SUNWCjv SUNWCjvx SUNWClu SUNWCnca SUNWCbdb SUNWCcpc
@@ -613,8 +646,8 @@ an x86 right now.
 
 --------------------------------------------------------------------------------
 pkgutil -s --target=sparc:5.10 -o cswstuff.sparc.5.10.pkg \
-  bash_completion elinks fileutils findutils gawk ggrep gsed gtar mc ncftp \
-  netcat pstree readline rsync screen shutils sudo tree \
+  bash_completion elinks fileutils findutils gawk ggrep gsed gtar gzip less \
+  mc ncftp netcat pstree readline rsync screen shutils sudo tree \
   unarj unrar unzip vim w3m wget zsh pkgutil puppet
 --------------------------------------------------------------------------------
 
@@ -685,6 +718,25 @@ Some tasks that we would like to do after installation, can be automated.
 
 TODO: Write scripts.
 
+
+Random stuff
+------------
+
+Mac addresses
+~~~~~~~~~~~~~
+
+If your box has more network interfaces, you might find (type `ifconfig -a`)
+that all your interfaces have the same MAC address. You can change that by
+setting a `local-mac-address?` setting with `eeprom` command.
+
+--------------------------------------------------------------------------------
+sparcbox / $ eeprom local-mac-address?
+local-mac-address?=false
+sparcbox / $ eeprom local-mac-address?=true
+sparcbox / $ eeprom local-mac-address?
+local-mac-address?=true
+--------------------------------------------------------------------------------
+
 Contact
 -------
 Comments and suggestions are greatly appreciated. Especially, if a bit of
@@ -706,5 +758,6 @@ References
 * http://www.sun.com/service/stb/index.jsp[Explorer]
 * http://devin.com/debian/debian-on-netra.html[Installing Debian on Netra T1]
   (serial cable pinout table)
+* http://tinyurl.com/9t249[Creating Solaris packages]
 
 // vim:set ft=asciidoc:
