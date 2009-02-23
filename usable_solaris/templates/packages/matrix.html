@@ -16,7 +16,8 @@ Package matrix
 
 <table id="package_matrix">
   <tr>
-    <td>&nbsp;</td>
+    <td><code>pkginst</code></td>
+    <td><code>version</code></td>
     {% for machine in machines %}
     <th>
       {{ machine.short }}
@@ -27,6 +28,7 @@ Package matrix
   {% for row in matrix %}
   <tr>
     <td><a href="{{ row.package_version.package.get_absolute_url }}" title="{{ row.package_version.version }}">{{ row.package_version.package }}</a></td>
+    <td>{{ row.package_version.version }}</td>
     {% for package_installation in row.package_installations %}
       <td style="background-color: {% if package_installation %}green{% else %}white{% endif %};">
         {% if package_installation %}
