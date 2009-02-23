@@ -122,28 +122,102 @@ VirtualBox website has instructions on how to install VirtualBox; they provide
 Ubuntu package repository, which you can add to your `/etc/apt/sources.list`.
 
 Their instructions miss one piece of information: to install kernel modules,
-you'll need an additional package:
+you'll need an additional package with kernel headers:
 
 --------------------------------------------------------------------------------
 sudo aptitude install linux-headers-$(uname -r)
 --------------------------------------------------------------------------------
 
+You need to use bridged networking with your virtual machine. On Ubuntu, the
+network configuration should look like this:
+
+.`/etc/network/interfaces`
+--------------------------------------------------------------------------------
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+iface br0 inet dhcp
+bridge_ports eth0
+
+auto eth0
+auto br0
+--------------------------------------------------------------------------------
+
+Create virtual hard disk for the virtual machine.
+
+--------------------------------------------------------------------------------
+VBoxManage createvdi -filename /path/to/file.vdi -size 16384
+--------------------------------------------------------------------------------
+
+Create the virtual machine and make settings.
+
+--------------------------------------------------------------------------------
+VBoxManage createvm -name yourvmname -register
+VBoxManage modifyvm yourvmname \
+	-ostype Solaris \
+	-memory 512m \
+	-acpi off \
+	-hda /path/to/file.vdi \
+	-nic1 hostif \
+	-hostifdev1 vbox0 \
+	-nictype1 82540EM \
+	-cableconnected1 on \
+	-nicspeed1 10000 \
+	-vrdp on \
+	-vrdpport 3990 \
+	-boot1 dvd
+--------------------------------------------------------------------------------
+
+NOTE: Give your virtual machine 16GB of disk at minimum. You will want to cram
+some DVD images on it, plus their extracted form. Of course, you can always
+create an additional disk and attach it afterwards, but it's better to save
+hassle.
+
+Take a look at the `vrdp` setting. It tells VirtualBox to expose virtual
+machine's console via rdesktop protocol. If you're running VirtualBox locally,
+you can connect to a running virtual machine with:
+
+--------------------------------------------------------------------------------
+rdesktop localhost:3990
+--------------------------------------------------------------------------------
+
+If you're running VirtualBox on a remote machine, you can create an ssh tunnel
+and use it:
+
+--------------------------------------------------------------------------------
+ssh -f -N -C -L 3990:localhost:3990 remotemachine
+rdesktop localhost:3990
+--------------------------------------------------------------------------------
+
 
 Installing Solaris
 ------------------
+Get the DVD ISO image from Sun's website. You need to register, but the download
+is free.
+
+'Insert' your ISO image into the virtual machine.
+
+--------------------------------------------------------------------------------
+VBoxManage modifyvm yourvmname -dvd /path/to/solaris.iso
+--------------------------------------------------------------------------------
+
+Start the virtual machine.
+
+--------------------------------------------------------------------------------
+VBoxManage startvm yourvmname
+--------------------------------------------------------------------------------
+
+And run rdesktop.
 
 I won't go into much detail of how to install Solaris on a virtual machine. Just
 a couple of hints.
 
-* If you're installing VirtualBox on Ubuntu, you'll need to install additional
-  packages to build kernel modules for VirtualBox.
 * I recommend installing a 'whole distribution', even though it takes 5GB and
   installs tons of stuff you won't use. It would be good to avoid installing X,
   KDE and the like, but if you choose any smaller set of packages, you won't
   have even bash. Ouch.
-* Give your virtual machine 16GB of disk at minimum. You will want to cram some
-  DVD images on it, plus their extracted form. Of course, you can always create
-  an additional disk and attach it afterwards, but it's better to save hassle.
 * After Solaris is installed, you get a shiny blue Sun-branded graphical login.
   Don't be tempted to use it! Just to tip you off, `root` user home directory is
   by default `/` (the root directory), and the default desktop environment is
@@ -401,6 +475,7 @@ single user mode and thus reducing system downtime.
 
 I'm not creating separate `/usr` or `/var` mountpoints, for simplicity.
 
+.JumpStart template diff
 --------------------------------------------------------------------------------
 @@ -330,8 +330,8 @@
 
@@ -750,7 +825,7 @@ python -c "print 'bWFjaWVqLmJsaXppbnNraUBnbWFpbC5jb20=\n'.decode('base64')"
 
 References
 ----------
-* http://www.sun.com/software/solaris/[Solaris Operating System]
+* http://www.sun.com/solaris/[Solaris Operating System]
 * http://www.blastwave.org/[Blastwave]
 * http://www.virtualbox.org/[VirtualBox]
 * http://www.sun.com/bigadmin/content/jet/[JumpStart]

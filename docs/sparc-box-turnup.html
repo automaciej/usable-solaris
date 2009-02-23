@@ -529,36 +529,100 @@ code and look into the <tt>scripts/vbox</tt> directory.</p></div>
 <div class="para"><p>VirtualBox website has instructions on how to install VirtualBox; they provide
 Ubuntu package repository, which you can add to your <tt>/etc/apt/sources.list</tt>.</p></div>
 <div class="para"><p>Their instructions miss one piece of information: to install kernel modules,
-you'll need an additional package:</p></div>
+you'll need an additional package with kernel headers:</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>sudo aptitude install linux-headers-$(uname -r)</tt></pre>
 </div></div>
+<div class="para"><p>You need to use bridged networking with your virtual machine. On Ubuntu, the
+network configuration should look like this:</p></div>
+<div class="listingblock">
+<div class="title">Example: <tt>/etc/network/interfaces</tt></div>
+<div class="content">
+<pre><tt># The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+iface br0 inet dhcp
+bridge_ports eth0
+
+auto eth0
+auto br0</tt></pre>
+</div></div>
+<div class="para"><p>Create virtual hard disk for the virtual machine.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>VBoxManage createvdi -filename /path/to/file.vdi -size 16384</tt></pre>
+</div></div>
+<div class="para"><p>Create the virtual machine and make settings.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>VBoxManage createvm -name yourvmname -register
+VBoxManage modifyvm yourvmname \
+        -ostype Solaris \
+        -memory 512m \
+        -acpi off \
+        -hda /path/to/file.vdi \
+        -nic1 hostif \
+        -hostifdev1 vbox0 \
+        -nictype1 82540EM \
+        -cableconnected1 on \
+        -nicspeed1 10000 \
+        -vrdp on \
+        -vrdpport 3990 \
+        -boot1 dvd</tt></pre>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">Give your virtual machine 16GB of disk at minimum. You will want to cram
+some DVD images on it, plus their extracted form. Of course, you can always
+create an additional disk and attach it afterwards, but it's better to save
+hassle.</td>
+</tr></table>
+</div>
+<div class="para"><p>Take a look at the <tt>vrdp</tt> setting. It tells VirtualBox to expose virtual
+machine's console via rdesktop protocol. If you're running VirtualBox locally,
+you can connect to a running virtual machine with:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>rdesktop localhost:3990</tt></pre>
+</div></div>
+<div class="para"><p>If you're running VirtualBox on a remote machine, you can create an ssh tunnel
+and use it:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>ssh -f -N -C -L 3990:localhost:3990 remotemachine
+rdesktop localhost:3990</tt></pre>
+</div></div>
 </div>
 <h2 id="_installing_solaris">4. Installing Solaris</h2>
 <div class="sectionbody">
+<div class="para"><p>Get the DVD ISO image from Sun's website. You need to register, but the download
+is free.</p></div>
+<div class="para"><p><em>Insert</em> your ISO image into the virtual machine.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>VBoxManage modifyvm yourvmname -dvd /path/to/solaris.iso</tt></pre>
+</div></div>
+<div class="para"><p>Start the virtual machine.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>VBoxManage startvm yourvmname</tt></pre>
+</div></div>
+<div class="para"><p>And run rdesktop.</p></div>
 <div class="para"><p>I won't go into much detail of how to install Solaris on a virtual machine. Just
 a couple of hints.</p></div>
 <div class="ilist"><ul>
-<li>
-<p>
-If you're installing VirtualBox on Ubuntu, you'll need to install additional
-  packages to build kernel modules for VirtualBox.
-</p>
-</li>
 <li>
 <p>
 I recommend installing a <em>whole distribution</em>, even though it takes 5GB and
   installs tons of stuff you won't use. It would be good to avoid installing X,
   KDE and the like, but if you choose any smaller set of packages, you won't
   have even bash. Ouch.
-</p>
-</li>
-<li>
-<p>
-Give your virtual machine 16GB of disk at minimum. You will want to cram some
-  DVD images on it, plus their extracted form. Of course, you can always create
-  an additional disk and attach it afterwards, but it's better to save hassle.
 </p>
 </li>
 <li>
@@ -806,6 +870,7 @@ can be used later with Live Upgrade, which allows OS patching without going into
 single user mode and thus reducing system downtime.</p></div>
 <div class="para"><p>I'm not creating separate <tt>/usr</tt> or <tt>/var</tt> mountpoints, for simplicity.</p></div>
 <div class="listingblock">
+<div class="title">Example: JumpStart template diff</div>
 <div class="content">
 <pre><tt>@@ -330,8 +330,8 @@
 
@@ -1133,7 +1198,7 @@ it was, for the sake of future generations.  Please use the following address:</
 <div class="ilist"><ul>
 <li>
 <p>
-<a href="http://www.sun.com/software/solaris/">Solaris Operating System</a>
+<a href="http://www.sun.com/solaris/">Solaris Operating System</a>
 </p>
 </li>
 <li>
@@ -1177,7 +1242,7 @@ it was, for the sake of future generations.  Please use the following address:</
 <div id="footer">
 <div id="footer-text">
 Version 12<br />
-Last updated 2009-02-22 15:14:55 IST
+Last updated 2009-02-23 07:53:50 IST
 </div>
 </div>
 </body>
