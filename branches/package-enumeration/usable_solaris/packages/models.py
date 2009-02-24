@@ -75,3 +75,19 @@ class PackageInstallation(models.Model):
     class Meta:
         ordering = ['machine', 'package_version']
         unique_together = (('package_version', 'machine'),)
+
+
+class Patch(models.Model):
+    name = models.CharField(max_length=200, unique=True)
+    number_1 = models.IntegerField()
+    number_2 = models.IntegerField()
+    obsoletes = models.ForeignKey('self',
+            related_name='obsoleted_by')
+    requires = models.ForeignKey('self',
+            related_name='required_by')
+    incompatibles = models.ForeignKey('self')
+    packages = models.ManyToManyField(Package)
+    def __unicode__(self):
+        return self.name
+    class Meta:
+        ordering = ['number_1', 'number_2']
