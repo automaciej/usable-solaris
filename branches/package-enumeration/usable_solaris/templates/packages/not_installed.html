@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}
+Package version {{ object }} not installed on
+{% endblock %}
+
+{% block main_data %}
+<h2>{{ object }}</h2>
+<p><i>{{ object.name }}</i></p>
+{% if machines %}
+<p>No version of <a href="{{ object.get_absolute_url }}">{{ object }}</a> is installed on:</p>
+<ul>
+  {% for machine in machines %}
+  <li><a href="{{ machine.get_absolute_url }}">{{ machine }}</a></li>
+  {% endfor %}
+</ul>
+{% else %}
+<p><a href="{{ object.get_absolute_url }}">{{ object }}</a>
+is installed on all machines.</p>
+{% endif %}
+
+{% endblock %}

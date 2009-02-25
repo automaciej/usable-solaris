@@ -3,6 +3,7 @@ from django.views.generic.list_detail import object_list
 # from django.views.generic.list_detail import object_detail
 from usable_solaris.packages.models import Machine
 from usable_solaris.packages.models import Package
+from usable_solaris.packages.models import Patch
 import usable_solaris.packages.views
 
 urlpatterns = patterns('',
@@ -13,8 +14,16 @@ urlpatterns = patterns('',
         { 'queryset': Machine.objects.all()}),
     (r'^packages/$', 'django.views.generic.list_detail.object_list',
         { 'queryset': Package.objects.all()}),
-    (r'^packages/(?P<object_id>[0-9]+)/$',
+                       (r'^packages/(?P<slug>[-\w]+)/$',
         'django.views.generic.list_detail.object_detail',
         { 'queryset': Package.objects.all()}),
-    (r'^matrix/$', 'usable_solaris.packages.views.matrix'),
+    (r'^patches/(?P<slug>[-\w]+)/$',
+        'django.views.generic.list_detail.object_detail',
+        { 'queryset': Patch.objects.all()}),
+    (r'^package-matrix/$', 'usable_solaris.packages.views.package_matrix'),
+    (r'^patch-matrix/$', 'usable_solaris.packages.views.patch_matrix'),
+    (r'^old-packages/$', 'usable_solaris.packages.views.old_packages'),
+    (r'^not-installed/(?P<object_id>[0-9]+)/$', 'usable_solaris.packages.'
+                                                'views.not_installed'),
+    (r'^$', 'usable_solaris.packages.views.index'),
 )

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}
+Old packages
+{% endblock %}
+
+
+{% block main_data %}
+<h1>Old packages</h1>
+<ul>
+{% for pkg_data in packages %}
+{% if pkg_data.package_ok %}
+{% else %}
+<li>
+<a href="{{ pkg_data.pkg.get_absolute_url }}">{{ pkg_data.pkg }}</a>
+  <ul>
+    <li>Most popular: {{ pkg_data.popular_ver }}
+    ({{ pkg_data.popular_count }} installations)</li>
+    <li>Other versions:
+      <ul>
+        {% for other_pkg in pkg_data.other_verss %}
+        <li>
+          {{ other_pkg.packageinstallation_set.count }}
+          of
+          {{ other_pkg.version }}
+        </li>
+        {% endfor %}
+      </ul>
+    </li>
+  </ul>
+</li>
+{% endif %}
+{% endfor %}
+</ul>
+{% endblock %}

@@ -11,7 +11,8 @@ Package detail:  {{ object }}
 <ul>
 {% for package_version in object.packageversion_set.all %}
   <li>
-    <a href="{{ package_version.package_version.package.get_absolute_url }}">{{ package_version.version }}</a>
+    <strong>{{ package_version.version }}</strong>
+    ({{ package_version.packageinstallation_set.count }})
     <ul>
       {% for packageinstallation in package_version.packageinstallation_set.all %}
       <li><a href="{{ packageinstallation.machine.get_absolute_url }}">{{ packageinstallation.machine }}</a></li>
@@ -19,5 +20,22 @@ Package detail:  {{ object }}
     </ul>
   </li>
   {% endfor %}
+</ul>
+<h3>Patches applying to this package</h3>
+<ul>
+{% for patch in object.patch_set.all %}
+<li style="bullet-style: none;">
+  <a href="{{ patch.get_absolute_url }}">
+    {{ patch }}
+  </a>
+</li>
+{% endfor %}
+</ul>
+<h3>See also</h3>
+<ul>
+  <li>
+    <a href="{{ object.get_not_installed_url }}">Package not installed
+    on...</a>
+  </li>
 </ul>
 {% endblock %}
