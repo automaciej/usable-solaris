@@ -3,8 +3,8 @@ from django.db import models
 # Create your models here.
 
 ARCH_CHOICES = (
-        ('x86', 'Intel x86'),
-        ('sparc', 'SPARC'),
+        ("x86", "Intel x86"),
+        ("sparc", "SPARC"),
 )
 
 class Package(models.Model):
@@ -38,7 +38,7 @@ class Package(models.Model):
     def get_absolute_url(self):
         return "/solaris/packages/%s/" % self.id
     class Meta:
-        ordering = ['pkginst']
+        ordering = ["pkginst"]
 
 
 class PackageVersion(models.Model):
@@ -47,8 +47,8 @@ class PackageVersion(models.Model):
     def __unicode__(self):
         return "%s-%s" % (self.package, self.version)
     class Meta:
-        ordering = ['package', 'version']
-        unique_together = (('package', 'version'),)
+        ordering = ["package", "version"]
+        unique_together = (("package", "version"),)
 
 
 class Machine(models.Model):
@@ -61,7 +61,7 @@ class Machine(models.Model):
     def short(self):
         return unicode(self.fqdn).split(".")[0]
     class Meta:
-        ordering = ['fqdn']
+        ordering = ["fqdn"]
 
 
 class PackageInstallation(models.Model):
@@ -73,21 +73,27 @@ class PackageInstallation(models.Model):
     def __unicode__(self):
         return "%s on %s" % (self.package_version, self.machine)
     class Meta:
-        ordering = ['machine', 'package_version']
-        unique_together = (('package_version', 'machine'),)
+        ordering = ["machine", "package_version"]
+        unique_together = (("package_version", "machine"),)
 
 
 class Patch(models.Model):
     name = models.CharField(max_length=200, unique=True)
     number_1 = models.IntegerField()
     number_2 = models.IntegerField()
-    obsoletes = models.ForeignKey('self',
-            related_name='obsoleted_by')
-    requires = models.ForeignKey('self',
-            related_name='required_by')
-    incompatibles = models.ForeignKey('self')
-    packages = models.ManyToManyField(Package)
+    obsoletes = models.ManyToManyField("self",
+            related_name="obsoleted_by", null=True, blank=True)
+    requires = models.ManyToManyField("self",
+            related_name="required_by", null=True, blank=True)
+    incompatibles = models.ManyToManyField("self", null=True, blank=True)
+    packages = models.ManyToManyField(Package, null=True, blank=True)
     def __unicode__(self):
         return self.name
     class Meta:
-        ordering = ['number_1', 'number_2']
+        ordering = ["number_1", "number_2"]
+        verbose_name_plural = "patches"
+
+class PatchInstallation(models.Model):
+    patch = models.ForeignKey(Patch)
+    machine = models.ForeignKey(Machine)
+

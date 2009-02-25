@@ -1,6 +1,7 @@
 from django.contrib import admin
 from usable_solaris.packages.models import Package, PackageVersion, Patch
 from usable_solaris.packages.models import Machine, PackageInstallation
+from usable_solaris.packages.models import PatchInstallation
 
 class PackageAdmin(admin.ModelAdmin):
     list_display = ('pkginst', 'category', 'name',
@@ -22,5 +23,9 @@ admin.site.register(Patch, PatchAdmin)
 class PackageInstallationAdmin(admin.ModelAdmin):
     list_display = ('package_version', 'machine', 'inst_date', 'status', 'arch')
 admin.site.register(PackageInstallation, PackageInstallationAdmin)
+
+class PatchInstallationAdmin(admin.ModelAdmin):
+    list_display = ('patch', 'machine')
+admin.site.register(PatchInstallation, PatchInstallationAdmin)
 
 
