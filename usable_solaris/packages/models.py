@@ -29,6 +29,7 @@ class Package(models.Model):
     """
     pkginst = models.CharField(max_length=200, unique=True)
     name = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True)
     category = models.CharField(max_length=200)
     vendor = models.CharField(max_length=200)
     email = models.CharField(max_length=200)
@@ -36,7 +37,9 @@ class Package(models.Model):
     def __unicode__(self):
         return self.pkginst
     def get_absolute_url(self):
-        return "/solaris/packages/%s/" % self.id
+        return "/solaris/packages/%s/" % self.slug
+    def get_not_installed_url(self):
+        return "/solaris/not-installed/%s/" % self.id
     class Meta:
         ordering = ["pkginst"]
 
@@ -79,16 +82,22 @@ class PackageInstallation(models.Model):
 
 class Patch(models.Model):
     name = models.CharField(max_length=200, unique=True)
+    slug = models.SlugField(unique=True)
     number_1 = models.IntegerField()
     number_2 = models.IntegerField()
-    obsoletes = models.ManyToManyField("self",
-            related_name="obsoleted_by", null=True, blank=True)
-    requires = models.ManyToManyField("self",
-            related_name="required_by", null=True, blank=True)
-    incompatibles = models.ManyToManyField("self", null=True, blank=True)
+    obsoletes = models.ManyToManyField(
+        "self", related_name="obsoleted_by",
+        null=True, blank=True, symmetrical=False)
+    requires = models.ManyToManyField(
+        "self", related_name="required_by", null=True, blank=True,
+        symmetrical=False)
+    incompatibles = models.ManyToManyField(
+        "self", null=True, blank=True, symmetrical=False)
     packages = models.ManyToManyField(Package, null=True, blank=True)
     def __unicode__(self):
         return self.name
+    def get_absolute_url(self):
+        return "/solaris/patches/%s/" % self.slug
     class Meta:
         ordering = ["number_1", "number_2"]
         verbose_name_plural = "patches"
@@ -96,4 +105,3 @@ class Patch(models.Model):
 class PatchInstallation(models.Model):
     patch = models.ForeignKey(Patch)
     machine = models.ForeignKey(Machine)
-

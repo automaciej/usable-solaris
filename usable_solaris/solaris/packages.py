@@ -2,7 +2,7 @@ import antlr3
 import logging
 import operator
 import subprocess
-import usable_solaris.packages.models as spm
+import usable_solaris.packages.models as pkgm
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -52,10 +52,11 @@ class MachineEnumerator(object):
     def PopulateDatabase(self, ast):
         logging.debug("Populating database...")
         try:
-            machine = spm.Machine.objects.get(fqdn=self.fqdn)
-        except spm.Machine.DoesNotExist:
-            machine = spm.Machine.objects.create(fqdn=self.fqdn)
+            machine = pkgm.Machine.objects.get(fqdn=self.fqdn)
+        except pkgm.Machine.DoesNotExist:
+            machine = pkgm.Machine.objects.create(fqdn=self.fqdn)
             machine.save()
+        package_installation_ids = set()
         for package in self.ast.tree.children:
             pkg_vars = {}
             for variable in package.children:
@@ -67,37 +68,60 @@ class MachineEnumerator(object):
             if not machine.arch:
                 machine.arch = pkg_vars['ARCH']
                 machine.save()
+            pkg, _ = pkgm.Package.objects.get_or_create(
+                pkginst=pkg_vars['PKGINST'],
+                defaults={
+                    'name': pkg_vars['NAME'],
+                    'category': pkg_vars['CATEGORY'],
+                    'slug': pkg_vars['PKGINST'],
+                })
             try:
-                pkg = spm.Package.objects.get(pkginst=pkg_vars['PKGINST'])
-            except spm.Package.DoesNotExist, e:
-                pkg = spm.Package.objects.create(
-                        pkginst=pkg_vars['PKGINST'],
-                        name=pkg_vars['NAME'],
-                        category=pkg_vars['CATEGORY'],
-                        # email=pkg_vars['EMAIL'],
-                        )
-                pkg.save()
-            try:
-                pkg_ver = spm.PackageVersion.objects.get(
+                pkg_ver = pkgm.PackageVersion.objects.get(
                         package=pkg,
                         version=pkg_vars['VERSION'])
-            except spm.PackageVersion.DoesNotExist:
-                pkg_ver = spm.PackageVersion.objects.create(
+            except pkgm.PackageVersion.DoesNotExist:
+                pkg_ver = pkgm.PackageVersion.objects.create(
                         package=pkg,
                         version=pkg_vars['VERSION'])
                 pkg_ver.save()
             try:
-                pkg_inst = spm.PackageInstallation.objects.get(
+                pkg_inst = pkgm.PackageInstallation.objects.get(
                         machine=machine,
                         package_version=pkg_ver)
-            except spm.PackageInstallation.DoesNotExist:
-                pkg_inst = spm.PackageInstallation.objects.create(
+            except pkgm.PackageInstallation.DoesNotExist:
+                if 'INSTDATE' in pkg_vars:
+                  inst_date = pkg_vars['INSTDATE']
+                else:
+                  inst_date = ""
+                pkg_inst = pkgm.PackageInstallation.objects.create(
                         machine=machine,
                         package_version=pkg_ver,
-                        inst_date=pkg_vars['INSTDATE'],
+                        inst_date=inst_date,
                         status=pkg_vars['STATUS'],
                         )
                 pkg_inst.save()
+            package_installation_ids.add(pkg_inst.id)
+        # Remove old installations
+        installations_in_db = pkgm.PackageInstallation.objects.filter(
+            machine__fqdn=self.fqdn)
+        for package_installation in installations_in_db:
+          if package_installation.id not in package_installation_ids:
+            package_installation.delete()
+
+
+class DatabasePopulator(object):
+
+  def ReadMachines(self, filename):
+    self.machines = [x.strip() for x in open(filename, "r").readlines()]
+
+  def DoMachines(self):
+    for fqdn in self.machines:
+      logging.debug("packages of %s..." % fqdn)
+      me = MachineEnumerator(fqdn)
+      me.Executify()
+      logging.debug("patches of %s..." % fqdn)
+      pe = PatchEnumerator(fqdn)
+      pe.PopulateDatabase()
 
 
 class PatchEnumerator(object):
@@ -105,9 +129,6 @@ class PatchEnumerator(object):
     def __init__(self, fqdn):
         self.fqdn = fqdn
         self.ast = None
-
-    def run(self):
-        ast = self.GetAst()
 
     def GetAst(self):
         if not self.ast:
@@ -123,40 +144,96 @@ class PatchEnumerator(object):
     def PopulateDatabase(self):
         ast = self.GetAst()
         tree = ast.tree
-        machine, machine_created = spm.Machine.objects.get_or_create(fqdn=self.fqdn)
+        machine, _ = pkgm.Machine.objects.get_or_create(fqdn=self.fqdn)
         for patch_ast in tree.children:
-            # [u'125096-15', u'Obsoletes', u'Requires', u'Incompatibles',
-            #         u'Packages']
-            patch_name = patch_ast.children[0].text
-            obsoletes_ast = patch_ast.children[1]
-            requires_ast = patch_ast.children[2]
-            incompatibles_ast = patch_ast.children[3]
-            packages_ast = patch_ast.children[4]
+            # [u'125096-15',
+            #  u'Obsoletes',
+            #  u'Requires',
+            #  u'Incompatibles',
+            #  u'Packages']
+            try:
+              patch_name = patch_ast.children[0].text
+              obsoletes_ast = patch_ast.children[1]
+              requires_ast = patch_ast.children[2]
+              incompatibles_ast = patch_ast.children[3]
+              packages_ast = patch_ast.children[4]
+            except IndexError, e:
+              logging.warn(e)
+              continue
             number_1, number_2 = [int(x) for x in patch_name.split("-")]
-            patch, patch_created = spm.Patch.objects.get_or_create(name=patch_name,
+            patch, _ = pkgm.Patch.objects.get_or_create(name=patch_name,
                     defaults={
                         'number_1': number_1,
                         'number_2': number_2,
-                        })
-            try:
-                patch_installation = spm.PatchInstallation.objects.get(
+                        'slug': patch_name, })
+            patch_installation, _ = pkgm.PatchInstallation.objects.get_or_create(
                         patch=patch, machine=machine)
-            except spm.PatchInstallation.DoesNotExist:
-                patch_installation = spm.PatchInstallation.objects.create(
-                        patch=patch, machine=machine)
+            # Packages
+            for package_ast in packages_ast.children:
+              pkginst = package_ast.text
+              pkg = pkgm.Package.objects.get(pkginst=pkginst)
+              patch.packages.add(pkg)
+            # Obsoleted patches
+            for obsoleted_patch_ast in obsoletes_ast.children:
+              obsoleted_patch_name = obsoleted_patch_ast.text
+              number_1, number_2 = [int(x)
+                                    for x in obsoleted_patch_name.split("-")]
+              obsoleted_patch, _ = pkgm.Patch.objects.get_or_create(
+                  name=obsoleted_patch_name, defaults={
+                        'number_1': number_1,
+                        'number_2': number_2,
+                        'slug': obsoleted_patch_name, })
+              patch.obsoletes.add(obsoleted_patch)
+            for required_patch_ast in requires_ast.children:
+              required_patch_name = required_patch_ast.text
+              number_1, number_2 = [int(x)
+                                    for x in required_patch_name.split("-")]
+              required_patch, _ = pkgm.Patch.objects.get_or_create(
+                  name=required_patch_name, defaults={
+                        'number_1': number_1,
+                        'number_2': number_2,
+                        'slug': required_patch_name, })
+              patch.requires.add(required_patch)
 
+
+class ConexpWriter(object):
+
+  def GeneratePatchMatrixCxt(self):
+    output = ["B\n\n"]
+    logging.debug("GeneratePatchMatrixCxt() started")
+    machines = pkgm.Machine.objects.all()
+    output.append("%s\n" % len(machines))
+    patches = pkgm.Patch.objects.all()
+    output.append("%s\n" % len(patches))
+    output.append("\n")
+    for machine in machines:
+      output.append("%s\n" % machine)
+    for patch in patches:
+      output.append("%s\n" % patch)
+    patch_installations = pkgm.PatchInstallation.objects.all()
+    logging.debug("Created QuerySets")
+    duplet_generator = (
+            (x.machine.fqdn,
+             x.patch.name)
+            for x in patch_installations)
+    logging.debug("Generator done, creating the set.")
+    patch_installation_index = set(duplet_generator)
+    logging.debug("Set ready. Generating table.")
+    table = []
+    for machine in machines:
+      for patch in patches:
+        duplet = (machine.fqdn,
+                  patch.name)
+        if duplet in patch_installation_index:
+          output.append("X")
+        else:
+          output.append(".")
+      output.append("\n")
+    return "".join(output)
 
 
 def main():
-    machines = [
-            'yaga.home.blizinski.pl',
-            'vsol01.home.blizinski.pl',
-            'lobelia.home.blizinski.pl',
-            # 'unavailable.home.blizinski.pl',
-    ]
-    for machine in machines:
-        me = MachineEnumerator(machines)
-        me.Executify()
+    print "Please use package classes."
 
 
 if __name__ == "__main__":

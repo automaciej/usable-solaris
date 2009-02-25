@@ -1,6 +1,13 @@
 This is a Django application allowing to index and then browse instalations of
 Solaris packages.
 
+Generating ANTLR parser
+-----------------------
+
+--------------------------------------------------------------------------------
+java -classpath /path/to/antlr-3.1.2.jar org.antlr.Tool pkginfo.g
+--------------------------------------------------------------------------------
+
 Populating the database
 -----------------------
 
