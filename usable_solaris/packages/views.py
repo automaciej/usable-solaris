@@ -5,72 +5,62 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG)
 
-def matrix(request, klass, template_path):
-    """Display a matrix of packages and hosts.
-
-    This is clearly the slowest function in this code.
-    """
-    logging.debug("matrix() started")
-    machines = pkgm.Machine.objects.all()
-    package_versions = klass.objects.all()
-    package_installations = pkgm.PackageInstallation.objects.all()
-    logging.debug("Created QuerySets")
-    triplet_generator = (
-            (x.machine.fqdn,
-             x.package_version.package.pkginst,
-             x.package_version.version)
-            for x in package_installations)
-    logging.debug("Generator done, creating the set.")
-    package_installation_index = set(triplet_generator)
-    logging.debug("Set ready. Generating table.")
+def package_matrix(request):
+    """Display a matrix of packages and hosts."""
+    logging.debug("package_matrix() started")
+    machines = pkgm.Machine.objects.order_by('fqdn')
+    package_versions = pkgm.PackageVersion.objects.order_by('package__pkginst')
+    package_installations = pkgm.PackageInstallation.objects.order_by(
+        'package_version__package__pkginst', 'machine__fqdn')
+    logging.debug("Generating table.")
     table = []
+    pkg_inst_pos = 0
+    pkg_inst_pos_max = len(package_installations) - 1
     for package_version in package_versions:
         row = {}
         row['package_version'] = package_version
         installation_list = []
         for machine in machines:
-            triplet = (machine.fqdn,
-                       package_version.package.pkginst,
-                       package_version.version)
-            installation_list.append(triplet in package_installation_index)
+            pkg_inst = package_installations[pkg_inst_pos]
+            if (machine.id == pkg_inst.machine.id and
+                    pkg_inst.package_version.id == package_version.id):
+                installation_list.append(True)
+                if pkg_inst_pos < pkg_inst_pos_max:
+                    pkg_inst_pos += 1
+            else:
+                installation_list.append(False)
         row['package_installations'] = installation_list
         table.append(row)
     logging.debug("Table ready, returning.")
-    return render_to_response(template_path, {
+    return render_to_response("packages/matrix.html", {
         'package_versions': package_versions,
         'machines': machines,
-        'matrix': table,
-        })
-
-def package_matrix(request):
-  return matrix(request, pkgm.PackageVersion, "packages/matrix.html")
+        'matrix': table
+    })
 
 def patch_matrix(request):
-    """Display a matrix of packages and hosts.
-
-    This is clearly the slowest function in this code.
-    """
-    logging.debug("matrix() started")
-    machines = pkgm.Machine.objects.all()
-    patches = pkgm.Patch.objects.all()
-    patch_installations = pkgm.PatchInstallation.objects.all()
-    logging.debug("Created QuerySets")
-    duplet_generator = (
-            (x.machine.fqdn,
-             x.patch.name)
-            for x in patch_installations)
-    logging.debug("Generator done, creating the set.")
-    patch_installation_index = set(duplet_generator)
-    logging.debug("Set ready. Generating table.")
+    """Display a matrix of patches and hosts."""
+    machines = pkgm.Machine.objects.order_by("fqdn")
+    patches = pkgm.Patch.objects.order_by("name")
+    patch_installations = pkgm.PatchInstallation.objects.order_by(
+            "patch__name", "machine__fqdn")
+    logging.debug("Generating table.")
     table = []
+    patch_inst_pos = 0
+    patch_inst_pos_max = len(patch_installations) - 1
     for patch in patches:
         row = {}
         row['patch'] = patch
         installation_list = []
         for machine in machines:
-            duplet = (machine.fqdn,
-                      patch.name)
-            installation_list.append(duplet in patch_installation_index)
+            patch_inst = patch_installations[patch_inst_pos]
+            if (machine.id == patch_inst.machine.id and
+                    patch_inst.patch.id == patch.id):
+                installation_list.append(True)
+                if patch_inst_pos < patch_inst_pos_max:
+                    patch_inst_pos += 1
+            else:
+                installation_list.append(False)
         row['patch_installations'] = installation_list
         table.append(row)
     logging.debug("Table ready, returning.")
@@ -82,10 +72,8 @@ def patch_matrix(request):
 
 def old_packages(request):
   pkgs = []
-  # for pkg in  pkgm.Package.objects.filter(pkginst__startswith="GOOG"):
   for pkg in  pkgm.Package.objects.all():
     pkg_data = {}
-    # pkg = pkgm.Package.objects.get(pkginst="GOOGbackup-scripts")
     # Find the most popular installation of this package.
     versions = pkg.packageversion_set.all()
     versions_with_counts = [
