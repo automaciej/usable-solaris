@@ -51,11 +51,7 @@ class MachineEnumerator(object):
 
     def PopulateDatabase(self, ast):
         logging.debug("Populating database...")
-        try:
-            machine = pkgm.Machine.objects.get(fqdn=self.fqdn)
-        except pkgm.Machine.DoesNotExist:
-            machine = pkgm.Machine.objects.create(fqdn=self.fqdn)
-            machine.save()
+        machine, _ = pkgm.Machine.objects.get_or_create(fqdn=self.fqdn)
         package_installation_ids = set()
         for package in self.ast.tree.children:
             pkg_vars = {}
@@ -75,15 +71,9 @@ class MachineEnumerator(object):
                     'category': pkg_vars['CATEGORY'],
                     'slug': pkg_vars['PKGINST'],
                 })
-            try:
-                pkg_ver = pkgm.PackageVersion.objects.get(
+            pkg_ver, _ = pkgm.PackageVersion.objects.get_or_create(
                         package=pkg,
                         version=pkg_vars['VERSION'])
-            except pkgm.PackageVersion.DoesNotExist:
-                pkg_ver = pkgm.PackageVersion.objects.create(
-                        package=pkg,
-                        version=pkg_vars['VERSION'])
-                pkg_ver.save()
             try:
                 pkg_inst = pkgm.PackageInstallation.objects.get(
                         machine=machine,
@@ -106,6 +96,8 @@ class MachineEnumerator(object):
             machine__fqdn=self.fqdn)
         for package_installation in installations_in_db:
           if package_installation.id not in package_installation_ids:
+            logging.debug("Removing package installation: "
+                "'%s'" % package_installation)
             package_installation.delete()
 
 
@@ -114,14 +106,18 @@ class DatabasePopulator(object):
   def ReadMachines(self, filename):
     self.machines = [x.strip() for x in open(filename, "r").readlines()]
 
-  def DoMachines(self):
-    for fqdn in self.machines:
+  def DoMachines(self, machines):
+    for fqdn in machines:
       logging.debug("packages of %s..." % fqdn)
       me = MachineEnumerator(fqdn)
       me.Executify()
       logging.debug("patches of %s..." % fqdn)
       pe = PatchEnumerator(fqdn)
       pe.PopulateDatabase()
+
+  def ProcessFile(self, filename):
+      self.ReadMachines(filename)
+      self.DoMachines(self.machines)
 
 
 class PatchEnumerator(object):

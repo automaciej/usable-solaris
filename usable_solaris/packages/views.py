@@ -9,9 +9,13 @@ def package_matrix(request):
     """Display a matrix of packages and hosts."""
     logging.debug("package_matrix() started")
     machines = pkgm.Machine.objects.order_by('fqdn')
-    package_versions = pkgm.PackageVersion.objects.order_by('package__pkginst')
+    package_versions = pkgm.PackageVersion.objects.order_by(
+            'package__pkginst',
+            'version')
     package_installations = pkgm.PackageInstallation.objects.order_by(
-        'package_version__package__pkginst', 'machine__fqdn')
+        'package_version__package__pkginst',
+        'package_version__version',
+        'machine__fqdn')
     logging.debug("Generating table.")
     table = []
     pkg_inst_pos = 0
