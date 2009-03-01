@@ -12,8 +12,10 @@ Machine detail:  {{ object }}
   <li>
     <a href="{{ package_installation.package_version.package.get_absolute_url }}">
       {{ package_installation.package_version.package.pkginst }}</a>
-    {% comment %}{{ package_installation.package_version.package.name }} {% endcomment %}
-    (installed on {{ package_installation.inst_date }})
+    <b>{{ package_installation.package_version.version }}</b>
+    <span style="color: gray;">
+      (installed on {{ package_installation.inst_date }})
+    </span>
   </li>
   {% endfor %}
 </ul>

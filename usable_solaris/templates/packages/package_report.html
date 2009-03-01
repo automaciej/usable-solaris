@@ -1,0 +1,43 @@
+
+{% extends "base.html" %}
+
+{% block title %}
+Package report
+{% endblock %}
+
+{% block main_data %}
+<h2>Packages</h2>
+{% comment %}
+<ul>
+  {% for package_dict in dicts_with_packages %}
+  <li>
+    {{ package_dict.package }}
+    ({{ package_dict.versions.count }} versions, {{ package_dict.installations_count }} installations)
+  </li>
+  {% endfor %}
+</ul>
+{% endcomment %}
+<table>
+  <tr>
+    <th># of installations</th>
+    <th>packages</th>
+  </tr>
+  {% for i_count, i_package_dicts in by_installation_count %}
+  <tr>
+    <td style="font-size: 200%;">
+    {{ i_count }}
+    </td>
+    <td>
+      {% for i_package_dict in i_package_dicts %}
+      <a href="{{ i_package_dict.package.get_absolute_url }}" title="{{ i_package_dict.package.name }}{% if i_package_dict.print_except_machines %}, except machines: {% for m in i_package_dict.except_machines %}{{ m.short }} {% endfor %}{% endif %}{% if i_package_dict.print_machines %}, machines: {% for m in i_package_dict.machines %}{{ m.short }} {% endfor %}{% endif %}">{{ i_package_dict.package }}</a>
+      {% endfor %}
+    </td>
+    <td>
+    </td>
+    <td>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+</ul>
+{% endblock %}

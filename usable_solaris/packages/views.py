@@ -113,5 +113,37 @@ def not_installed(request, object_id):
     'machines': machines,
     })
 
+def package_report(request):
+  packages = pkgm.Package.objects.all()
+  def GetDict(package):
+    versions = package.packageversion_set.all()
+    installation_counts = [version.packageinstallation_set.count()
+                           for version in versions]
+    installations_count = sum(installation_counts)
+    machines = pkgm.Machine.objects.filter(
+        packageinstallation__package_version__package__id=package.id)
+    except_machines = pkgm.Machine.objects.exclude(id__in=[x.id
+                                                           for x in machines])
+    return {
+        'package': package,
+        'versions': versions,
+        'installations_count': installations_count,
+        'machines': machines,
+        'except_machines': except_machines,
+        'print_machines': len(machines) < 10 and len(machines) > 0,
+        'print_except_machines': len(except_machines) < 10 and len(except_machines) > 0,
+    }
+  dicts_with_packages = [GetDict(x) for x in packages]
+  # By the number of installations
+  by_installation_count = {}
+  for pkg_dict in dicts_with_packages:
+    if pkg_dict['installations_count'] not in by_installation_count:
+      by_installation_count[pkg_dict['installations_count']] = []
+    by_installation_count[pkg_dict['installations_count']].append(pkg_dict)
+  return render_to_response("packages/package_report.html", {
+    'dicts_with_packages': dicts_with_packages,
+    'by_installation_count': reversed(by_installation_count.items()),
+  })
+
 def index(request):
   return render_to_response("packages/index.html")

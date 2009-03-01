@@ -105,3 +105,5 @@ class Patch(models.Model):
 class PatchInstallation(models.Model):
     patch = models.ForeignKey(Patch)
     machine = models.ForeignKey(Machine)
+    def __unicode__(self):
+      return u"%s on %s" % (self.patch, self.machine)
