@@ -10,12 +10,34 @@ Patch detail:  {{ object }}
   <input type="submit" value="Find in sunsolve" />
   <input type="hidden" name="documentId" value="{{ object.name }}" />
 </form>
-<p>Patch installed on {{ object.patchinstallation_set.count }} machines:</p>
 {% if object.obsoleted_by.all %}
 <p> <strong>OBSOLETED</strong>
 (by {% for p in object.obsoleted_by.all %}<a href="{{ p.get_absolute_url }}">{{ p }}</a> {% endfor %})
 </p>
 {% endif %}
+{% if object.obsoletes.all %}
+<p> Obsoletes:
+{% for p in object.obsoletes.all %}
+{% if p.patchinstallation_set.count %}
+<a href="{{ p.get_absolute_url }}">{{ p }}</a>
+({{ p.patchinstallation_set.count }})
+{% else %}
+<a href="{{ p.get_absolute_url }}" style="color: AAA;">{{ p }}</a>
+{% endif %}
+{% endfor %}
+</p>
+{% endif %}
+{% if object.requires.all %}
+<p> Requires:
+{% for p in object.requires.all %}<a href="{{ p.get_absolute_url }}">{{ p }}</a> {% endfor %}
+</p>
+{% endif %}
+{% if object.required_by.all %}
+<p> Required by:
+{% for p in object.required_by.all %}<a href="{{ p.get_absolute_url }}">{{ p }}</a> {% endfor %}
+</p>
+{% endif %}
+<p>Patch installed on {{ object.patchinstallation_set.count }} machines:</p>
 <ul>
   {% for patchinstallation in object.patchinstallation_set.all %}
   <li><a href="{{ patchinstallation.machine.get_absolute_url }}">
