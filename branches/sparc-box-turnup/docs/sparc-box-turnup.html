@@ -402,8 +402,8 @@ function generateToc(toclevels) {
 <div id="header">
 <h1>Turning up a sparc box</h1>
 <span id="author">Maciej Bliziński</span><br />
-<span id="revision">version 12,</span>
-2009-02-22
+<span id="revision">version 26,</span>
+2009-03-05
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
@@ -694,8 +694,13 @@ root@vsol01 / # echo "PS1=\"$PS1\"" &gt;&gt; ~/.bashrc
 root@vsol01 / # █</tt></pre>
 </div></div>
 <div class="para"><p>That's better. Now, the first thing you most probably want to do, is getting
-a set of GNU tools. Here, I recommend using blastwave repository. Go to
-Blastwave website and follow instructions <em>How to use Blastwave</em>.</p></div>
+a set of GNU tools. Here, I recommend using OpenCSW repository.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>pkgadd -d http://ftp.heanet.ie/pub/opencsw/pkg_get.pkg all</tt></pre>
+</div></div>
+<div class="para"><p>TODO: OpenCSW website lacks instructions on how to get started. Put something in
+here or encourage OpenCSW to write those instructions.</p></div>
 <div class="para"><p>If you want to do any editing in vi and you're using GNU screen, you need to set
 your TERM variable into something that bare Solaris understands:</p></div>
 <div class="listingblock">
@@ -706,14 +711,14 @@ your TERM variable into something that bare Solaris understands:</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>echo &gt;&gt; /etc/opt/csw/pkgutil.conf \
-  "mirror=ftp://ftp.heanet.ie/mirrors/blastwave.org/unstable/"
+  "mirror=ftp://ftp.heanet.ie/pub/opencsw/unstable/"
 
 echo &gt;&gt; /etc/default/login \
   "PATH=/bin:/sbin:/usr/sbin:/usr/bin:/opt/csw/sbin:/opt/csw/bin:\
 /opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin"
 
 echo &gt;&gt; /etc/default/login \
-  "PATH=/bin:/sbin:/usr/sbin:/usr/bin:/opt/csw/sbin:/opt/csw/bin:\
+  "SUPATH=/bin:/sbin:/usr/sbin:/usr/bin:/opt/csw/sbin:/opt/csw/bin:\
 /opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin"</tt></pre>
 </div></div>
 <div class="para"><p>Since we were setting up PATHs, you can logout and log back in.</p></div>
@@ -721,50 +726,13 @@ echo &gt;&gt; /etc/default/login \
 <div class="content">
 <pre><tt>pkgutil --catalog</tt></pre>
 </div></div>
-<div class="para"><p>Now you can install all the software available from Blastwave. Some of my first
+<div class="para"><p>Now you can install all the software available from OpenCSW. Some of my first
 choices:</p></div>
-<div class="ilist"><ul>
-<li>
-<p>
-vim
-</p>
-</li>
-<li>
-<p>
-elinks
-</p>
-</li>
-<li>
-<p>
-findutils (and running <tt>gupdatedb &amp;</tt>)
-</p>
-</li>
-<li>
-<p>
-gawk, ggrep, gsed, gtar
-</p>
-</li>
-<li>
-<p>
-wget, rsync
-</p>
-</li>
-<li>
-<p>
-sudo
-</p>
-</li>
-<li>
-<p>
-tree
-</p>
-</li>
-<li>
-<p>
-screen, mc
-</p>
-</li>
-</ul></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>pkgutil -i vim elinks findutils gawk ggrep gsed gtar wget rsync sudo screen mc
+updatedb &amp;</tt></pre>
+</div></div>
 </div>
 <h2 id="_installing_jet_jumpstart_enterprise_toolkit">6. Installing JET, JumpStart Enterprise Toolkit</h2>
 <div class="sectionbody">
@@ -1058,7 +1026,7 @@ Current status: installed</tt></pre>
 <div class="para"><p>Here, we have found that the <tt>less</tt> command comes from <tt>SUNWless</tt> package. You
 can go to the JumpStart template and add <tt>SUNWless</tt> to the
 <tt>base_config_profile_add_packages</tt> list.</p></div>
-<h3 id="_incorporating_csw_a_k_a_blastwave_into_jumpstart">6.7. Incorporating CSW (a.k.a. Blastwave) into JumpStart</h3><div style="clear:left"></div>
+<h3 id="_incorporating_csw_community_software_into_jumpstart">6.7. Incorporating CSW (Community Software) into JumpStart</h3><div style="clear:left"></div>
 <div class="para"><p>When we're talking about making Solaris usable, we're not talking about the
 temporary, virtual one, we're talking about the one you're installing on the
 sparc box.</p></div>
@@ -1136,14 +1104,26 @@ CSWzsh
 <div class="para"><p>Make sure that the word <tt>custom</tt> is included in <tt>base_config_products</tt>.
 Otherwise your custom packages won't be installed at all.</p></div>
 </div>
-<h2 id="_adding_custom_scripts">7. Adding custom scripts</h2>
+<h2 id="_adding_custom_files_and_scripts">7. Adding custom files and scripts</h2>
 <div class="sectionbody">
+<div class="para"><p>JET allows to deploy a custom set of files. Read comments in the template for
+instructions. One trap I'va fallen into was that had all the settings in the
+custom section near the bottom of the template, but I didn't include the
+<tt>custom</tt> word in the <tt>base_config_products</tt> variable, which prevented the whole
+custom section from being processed.</p></div>
 <div class="para"><p>Some tasks that we would like to do after installation, can be automated.</p></div>
 <div class="ilist"><ul>
 <li>
 <p>
 Setting root home directory to <tt>/root</tt>
 </p>
+<div class="ilist"><ul>
+<li>
+<p>
+.bash_profile and .bashrc
+</p>
+</li>
+</ul></div>
 </li>
 <li>
 <p>
@@ -1152,17 +1132,42 @@ Setting a better prompt
 </li>
 <li>
 <p>
-Setting default paths
+Setting <tt>MANPATH</tt> to include CSW
 </p>
 </li>
 <li>
 <p>
-Importing blastwave gpg key
+Setting <tt>TERMINFO</tt> to include CSW
 </p>
 </li>
 <li>
 <p>
-Configuring pkgutil
+Setting default paths (<tt>/etc/default/login</tt>)
+</p>
+</li>
+<li>
+<p>
+<tt>/opt/csw/share/vim/vimrc</tt> settings
+</p>
+</li>
+<li>
+<p>
+Importing OpenCSW gpg key
+</p>
+</li>
+<li>
+<p>
+Configuring pkgutil (pkg-get is preferred in OpenCSW?)
+</p>
+</li>
+<li>
+<p>
+Enable remote root ssh (It's a test box, remember?)
+</p>
+</li>
+<li>
+<p>
+Deploy authorized ssh public keys
 </p>
 </li>
 </ul></div>
@@ -1203,7 +1208,7 @@ it was, for the sake of future generations.  Please use the following address:</
 </li>
 <li>
 <p>
-<a href="http://www.blastwave.org/">Blastwave</a>
+<a href="http://www.opencsw.org/">OpenCSW</a>
 </p>
 </li>
 <li>
@@ -1241,8 +1246,8 @@ it was, for the sake of future generations.  Please use the following address:</
 </div>
 <div id="footer">
 <div id="footer-text">
-Version 12<br />
-Last updated 2009-02-23 07:53:50 IST
+Version 26<br />
+Last updated 2009-03-05 08:51:23 IST
 </div>
 </div>
 </body>
