@@ -290,9 +290,14 @@ root@vsol01 / # █
 --------------------------------------------------------------------------------
 
 That's better. Now, the first thing you most probably want to do, is getting
-a set of GNU tools. Here, I recommend using blastwave repository. Go to
-Blastwave website and follow http://www.blastwave.org/howto.html[instructions
-_How to use Blastwave_].
+a set of GNU tools. Here, I recommend using OpenCSW repository.
+
+--------------------------------------------------------------------------------
+pkgadd -d http://ftp.heanet.ie/pub/opencsw/pkg_get.pkg all
+--------------------------------------------------------------------------------
+
+TODO: OpenCSW website lacks instructions on how to get started. Put something in
+here or encourage OpenCSW to write those instructions.
 
 If you want to do any editing in vi and you're using GNU screen, you need to set
 your TERM variable into something that bare Solaris understands:
@@ -322,7 +327,7 @@ Since we were setting up PATHs, you can logout and log back in.
 pkgutil --catalog
 --------------------------------------------------------------------------------
 
-Now you can install all the software available from Blastwave. Some of my first
+Now you can install all the software available from OpenCSW. Some of my first
 choices:
 
 --------------------------------------------------------------------------------
@@ -796,8 +801,8 @@ Some tasks that we would like to do after installation, can be automated.
 - Setting `TERMINFO` to include CSW
 - Setting default paths (`/etc/default/login`)
 - `/opt/csw/share/vim/vimrc` settings
-- Importing blastwave gpg key
-- Configuring pkgutil
+- Importing OpenCSW gpg key
+- Configuring pkgutil (pkg-get is preferred in OpenCSW?)
 - Enable remote root ssh (It's a test box, remember?)
 - Deploy authorized ssh public keys
 
@@ -836,7 +841,7 @@ python -c "print 'bWFjaWVqLmJsaXppbnNraUBnbWFpbC5jb20=\n'.decode('base64')"
 References
 ----------
 * http://www.sun.com/solaris/[Solaris Operating System]
-* http://www.blastwave.org/[Blastwave]
+* http://www.opencsw.org/[OpenCSW]
 * http://www.virtualbox.org/[VirtualBox]
 * http://www.sun.com/bigadmin/content/jet/[JumpStart]
 * http://www.sun.com/software/security/jass/[SUNWjass]
