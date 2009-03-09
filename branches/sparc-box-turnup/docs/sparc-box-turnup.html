@@ -686,56 +686,143 @@ after logging in, is starting bash.</p></div>
 <pre><tt># bash
 bash-3.00# █</tt></pre>
 </div></div>
-<div class="para"><p>It's got sucky prompt by default, let's set it to something different.</p></div>
+<div class="para"><p>Enable remote root ssh logins for convenience (make sure you have a strong root
+password!). <em>I don't recommend enabling this for production systems.</em></p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>bash-3.00# PS1="\[\033[01;31m\]\h\[\033[01;34m\] \W \$\[\033[00m\] "
-root@vsol01 / # echo "PS1=\"$PS1\"" &gt;&gt; ~/.bashrc
-root@vsol01 / # █</tt></pre>
+<pre><tt>cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+sed &lt; /etc/ssh/sshd_config.bak &gt; /etc/ssh/sshd_config \
+        -e 's/PermitRootLogin no/PermitRootLogin yes/'
+svcadm restart ssh</tt></pre>
 </div></div>
-<div class="para"><p>That's better. Now, the first thing you most probably want to do, is getting
-a set of GNU tools. Here, I recommend using OpenCSW repository.</p></div>
+<div class="para"><p>Now you can login via ssh and avoid working with the slow system console. It's
+also advisable to have more than one session open just in case something goes
+wrong. Go ahead and log in via ssh. (You need to start bash again.)</p></div>
+<div class="para"><p>Let's set root's home directory and default shell. It's been argued that having
+<tt>/</tt> as root's home directory is fine because you can always use <tt>/var/tmp</tt> for
+working files. Yet somehow I don't like the idea of having root's <tt>.bashrc</tt> and
+<tt>.ssh</tt> kept in filesystem's root.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>mkdir /root
+chmod 0700 /root
+chown root:root /root
+cp /etc/passwd /etc/passwd.bak
+sed &lt; /etc/passwd.bak &gt; /etc/passwd.new \
+  -e 's+root:x:0:0:Super-User:/:/sbin/sh+root:x:0:0:Super-User:/root:/bin/bash+'</tt></pre>
+</div></div>
+<div class="para"><p>You can examine <tt>/etc/passwd.new</tt> to see if it contains the right thing. If it
+looks good, copy it to <tt>/etc/passwd</tt>.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>[[ -s /etc/passwd.new ]] &amp;&amp; cp /etc/passwd.new /etc/passwd || echo "It's empty!"</tt></pre>
+</div></div>
+<div class="para"><p>Let's set default paths.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>echo &gt;&gt; /etc/default/login \
+  "PATH=/opt/csw/sbin:/opt/csw/bin:/bin:/sbin:/usr/sbin:/usr/bin:\
+/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin:\
+/opt/SUNWspro/bin"
+
+echo &gt;&gt; /etc/default/login \
+  "SUPATH=/opt/csw/sbin:/opt/csw/bin:/bin:/sbin:/usr/sbin:/usr/bin:\
+/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin:\
+/opt/SUNWspro/bin"</tt></pre>
+</div></div>
+<div class="admonitionblock">
+<table><tr>
+<td class="icon">
+<div class="title">Note</div>
+</td>
+<td class="content">The file <tt>/etc/default/login</tt> doesn't really follow shell syntax, and it's
+not meant to be sourced.</td>
+</tr></table>
+</div>
+<div class="para"><p>It's useful to set <tt>MANPATH</tt> as well.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>echo &gt;&gt; /etc/profile \
+  "MANPATH=/opt/csw/share/man:/opt/SUNWjet/man:/usr/sfw/share/man\
+/opt/SUNWexplo/man:/opt/SUNWspro/man:/usr/share/man"
+echo &gt;&gt; /etc/profile "export MANPATH"</tt></pre>
+</div></div>
+<div class="para"><p>Bash has got sucky prompt by default, let's set it to something different.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>PS1="\[\033[01;31m\]\h\[\033[01;34m\] \W \$\[\033[00m\] "
+echo "PS1=\"$PS1\"" &gt;&gt; ~/.bashrc
+echo '[[ -r ~/.bashrc ]] &amp;&amp; source ~/.bashrc' &gt;&gt; ~/.bash_profile</tt></pre>
+</div></div>
+<div class="para"><p>Now the prompt should look like this:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>root@vsol01 / # █</tt></pre>
+</div></div>
+<div class="para"><p>That's better. You can now log off (but keep your console session open just in
+case) and log in again to see if your <tt>PATH</tt> is set properly.</p></div>
+</div>
+<h2 id="_opencsw">6. OpenCSW</h2>
+<div class="sectionbody">
+<div class="para"><p>Now, the first thing you most probably want to do, is getting a set of GNU
+tools. I recommend using OpenCSW repository, as it tends to have newer versions
+of packages.</p></div>
+<div class="sidebarblock">
+<div class="sidebar-content">
+<div class="para"><p>TODO: OpenCSW website
+<a href="http://opencsw.org/bugtrack/view.php?id=2971">lacks instructions</a>
+on how to get started. Put something in here or encourage OpenCSW
+to write those instructions.</p></div>
+</div></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>pkgadd -d http://ftp.heanet.ie/pub/opencsw/pkg_get.pkg all</tt></pre>
 </div></div>
-<div class="para"><p>TODO: OpenCSW website lacks instructions on how to get started. Put something in
-here or encourage OpenCSW to write those instructions.</p></div>
+<div class="para"><p>Or, if you're closer to the US:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>pkgadd -d http://www.ibiblio.org/pub/solaris/opencsw/pkg_get.pkg all</tt></pre>
+</div></div>
+<h3 id="_what_if_tt_wget_tt_isn_t_installed">6.1. What if <tt>wget</tt> isn't installed</h3><div style="clear:left"></div>
+<div class="para"><p>You need <tt>wget</tt> in order to use <tt>pkg-get</tt>. On a fresh Solaris installation, it
+should be located in <tt>/usr/sfw/bin/wget</tt>. If you don't have this binary, you
+need to find your installation media and install packages <tt>SUNWwgetr</tt> and
+<tt>SUNWwgetu</tt>. The packages are in the directory form, and they're located in
+<tt>/path/to/media/Solaris_10/Product</tt>. Copy <tt>SUNWwgetr</tt> and <tt>SUNWwgetu</tt> over to,
+say <tt>/tmp</tt> on your wgetless Solaris host and:</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>pkgadd -d /tmp SUNWwgetr SUNWwgetu</tt></pre>
+</div></div>
+<h3 id="_continuing">6.2. Continuing</h3><div style="clear:left"></div>
 <div class="para"><p>If you want to do any editing in vi and you're using GNU screen, you need to set
 your TERM variable into something that bare Solaris understands:</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>export TERM=xterm</tt></pre>
 </div></div>
-<div class="para"><p>Let's set up some things:</p></div>
+<div class="para"><p>Let's set up few more things:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>echo &gt;&gt; /etc/opt/csw/pkgutil.conf \
-  "mirror=ftp://ftp.heanet.ie/pub/opencsw/unstable/"
-
-echo &gt;&gt; /etc/default/login \
-  "PATH=/bin:/sbin:/usr/sbin:/usr/bin:/opt/csw/sbin:/opt/csw/bin:\
-/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin"
-
-echo &gt;&gt; /etc/default/login \
-  "SUPATH=/bin:/sbin:/usr/sbin:/usr/bin:/opt/csw/sbin:/opt/csw/bin:\
-/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin"</tt></pre>
+<pre><tt>echo &gt;&gt; /etc/opt/csw/pkg-get.conf \
+  "url=ftp://ftp.heanet.ie/pub/opencsw/current/"</tt></pre>
 </div></div>
 <div class="para"><p>Since we were setting up PATHs, you can logout and log back in.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>pkgutil --catalog</tt></pre>
+<pre><tt>pkg-get -U</tt></pre>
 </div></div>
 <div class="para"><p>Now you can install all the software available from OpenCSW. Some of my first
 choices:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>pkgutil -i vim elinks findutils gawk ggrep gsed gtar wget rsync sudo screen mc
+<pre><tt>pkg-get -i vim elinks findutils gawk ggrep gsed gtar wget rsync sudo screen mc
 updatedb &amp;</tt></pre>
 </div></div>
 </div>
-<h2 id="_installing_jet_jumpstart_enterprise_toolkit">6. Installing JET, JumpStart Enterprise Toolkit</h2>
+<h2 id="_jet_jumpstart_enterprise_toolkit">7. JET, JumpStart Enterprise Toolkit</h2>
 <div class="sectionbody">
+<h3 id="_installation">7.1. Installation</h3><div style="clear:left"></div>
 <div class="para"><p>Go to the JumpStart website, download the <tt>jet.pkg.bz2</tt> package and follow
 instructions. It's basically about installing the jet package, then copying
 Solaris media and configuring your client.</p></div>
@@ -774,7 +861,7 @@ export it and you can't export something that is a remote mount. You need to
 have it on a local disk.</td>
 </tr></table>
 </div>
-<h3 id="_what_is_a_template">6.1. What is a template</h3><div style="clear:left"></div>
+<h3 id="_what_is_a_template">7.2. What is a template</h3><div style="clear:left"></div>
 <div class="para"><p>A <em>template</em> in JET is not so much a template, at least from your perspective.
 It is a template in a sense, that it's used to generate configuration for
 jumpstart, the underlying technology, which is really a collection of RARP, TFTP
@@ -782,14 +869,14 @@ and NFS stuff.</p></div>
 <div class="para"><p>It's best if you have your hostname configured in DNS and RevDNS. If your host
 is, say <tt>sparcbox</tt>, and <tt>sparcbox</tt> resolves in your DNS, JET will pick up the IP
 address and put it into the template.</p></div>
-<h3 id="_making_one">6.2. Making one</h3><div style="clear:left"></div>
+<h3 id="_making_one">7.3. Making one</h3><div style="clear:left"></div>
 <div class="para"><p>Now, let's make it.</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>cd /opt/SUNWjet/Templates
 make_template sparcbox base_config sds sbd custom zfs</tt></pre>
 </div></div>
-<h3 id="_editing_the_template">6.3. Editing the template</h3><div style="clear:left"></div>
+<h3 id="_editing_the_template">7.4. Editing the template</h3><div style="clear:left"></div>
 <div class="para"><p>Now, you can edit the file named <tt>sparcbox</tt> (or whatever is the name of your
 machine).</p></div>
 <div class="listingblock">
@@ -800,7 +887,7 @@ machine).</p></div>
 a good idea what to put where. I'll only point out more important bits and some
 gotchas.</p></div>
 <div class="para"><p>Bits you need to edit:</p></div>
-<h4 id="_architecture_type">6.3.1. Architecture type</h4>
+<h4 id="_architecture_type">7.4.1. Architecture type</h4>
 <div class="para"><p>Which architecture you need, can be looked up in comments. Mine was <tt>sun4u</tt>.</p></div>
 <div class="listingblock">
 <div class="content">
@@ -809,20 +896,20 @@ base_config_ClientEther=XX.XX.XX.XX.XX.XX
 base_config_ClientOS=10_U6_SPARC</tt></pre>
 </div></div>
 <div class="para"><p>The <tt>10_U6_SPARC</tt> bit should match what was used in <tt>copy_solaris_media</tt>.</p></div>
-<h4 id="_jumpstart_sysidcfg_information">6.3.2. JumpStart sysidcfg information</h4>
+<h4 id="_jumpstart_sysidcfg_information">7.4.2. JumpStart sysidcfg information</h4>
 <div class="para"><p>When specifying <tt>base_config_sysidcfg_nameservice</tt>, you need to enclose the
 whole thing in quotes.</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>base_config_sysidcfg_nameservice="DNS { domain_name=(...) }"</tt></pre>
 </div></div>
-<h4 id="_disk_labeling">6.3.3. Disk labeling</h4>
+<h4 id="_disk_labeling">7.4.3. Disk labeling</h4>
 <div class="listingblock">
 <div class="content">
 <pre><tt>base_config_label_disks="all"
 base_config_profile_fdisk="alldisk"</tt></pre>
 </div></div>
-<h4 id="_jumpstart_profile_information">6.3.4. JumpStart profile information</h4>
+<h4 id="_jumpstart_profile_information">7.4.4. JumpStart profile information</h4>
 <div class="para"><p><tt>SUNWCuser</tt> is selected by default. We won't need all that on the sparc box, and
 we'll learn how to pick and choose packages we want. <tt>SUNWCreq</tt> gives a much
 lighter OS base. (In a sense that it installs less packages.)</p></div>
@@ -830,7 +917,7 @@ lighter OS base. (In a sense that it installs less packages.)</p></div>
 <div class="content">
 <pre><tt>base_config_profile_cluster=SUNWCreq</tt></pre>
 </div></div>
-<h4 id="_disk_slices">6.3.5. Disk slices</h4>
+<h4 id="_disk_slices">7.4.5. Disk slices</h4>
 <div class="para"><p>We'll create two slices of equal size. I picked 4096MB, but you might want
 something smaller or bigger, depending on the size of your hard drive. The idea
 is that there are <em>root</em> and <em>alt root</em> partitions, both of equal size. They
@@ -881,7 +968,7 @@ single user mode and thus reducing system downtime.</p></div>
  #
  ############</tt></pre>
 </div></div>
-<h4 id="_additional_packages_and_clusters">6.3.6. Additional packages and clusters</h4>
+<h4 id="_additional_packages_and_clusters">7.4.6. Additional packages and clusters</h4>
 <div class="listingblock">
 <div class="content">
 <pre><tt>base_config_profile_add_packages="SUNWman SUNWless SUNWdoc SUNWtoo SUNWrcmdc"
@@ -892,7 +979,7 @@ SUNWCmd SUNWCmda SUNWCmco SUNWCopenssl SUNWCsmba SUNWCutf8 SUNWCwbem
 SUNWCwget SUNWCzfs SUNWCzone SUNWCpool"</tt></pre>
 </div></div>
 <div class="para"><p>Strings spanning multiple lines will work fine.</p></div>
-<h4 id="_sds_8212_disk_mirror">6.3.7. SDS &#8212; disk mirror</h4>
+<h4 id="_sds_8212_disk_mirror">7.4.7. SDS &#8212; disk mirror</h4>
 <div class="para"><p>JumpStart can allow to create a mirrored root in a very easy way. All you need
 is two disks of the same size and knowing which one is going to be the mirror.</p></div>
 <div class="listingblock">
@@ -910,7 +997,7 @@ is two disks of the same size and knowing which one is going to be the mirror.</
 <div class="para"><p>It's perfectly save to skip this part during the first install and figure out
 which disk is which on a live system. Then you can go back to this place and
 enter the name of the mirror disk.</p></div>
-<h3 id="_make_client">6.4. make_client</h3><div style="clear:left"></div>
+<h3 id="_make_client">7.5. make_client</h3><div style="clear:left"></div>
 <div class="para"><p>When your template is ready, you can <tt>make_client</tt>, which means that JET scripts
 will pick up stuff that you enclosed in the template and configure JumpStart.</p></div>
 <div class="listingblock">
@@ -920,7 +1007,7 @@ will pick up stuff that you enclosed in the template and configure JumpStart.</p
 <div class="para"><p><em>If you run it multiple times, you need to add the <tt>-f</tt> flag.</em></p></div>
 <div class="para"><p>If this command fails you'll notice it quite easily, as it printd a huge banner
 with the word <em>FAILED</em>. Apart from the banner, it prints useful error messages.</p></div>
-<h3 id="_launching_the_installation">6.5. Launching the installation</h3><div style="clear:left"></div>
+<h3 id="_launching_the_installation">7.6. Launching the installation</h3><div style="clear:left"></div>
 <div class="para"><p>You need to get to the Open Boot Prom, or OBP. You can tell that you're there
 when you're seeing an <tt>ok</tt> prompt, like this:</p></div>
 <div class="listingblock">
@@ -996,7 +1083,7 @@ way:</p></div>
 <div class="content">
 <pre><tt>root@netra / # reboot -- net - install</tt></pre>
 </div></div>
-<h3 id="_when_a_command_is_missing">6.6. When a command is missing</h3><div style="clear:left"></div>
+<h3 id="_when_a_command_is_missing">7.7. When a command is missing</h3><div style="clear:left"></div>
 <div class="para"><p>You may see that a command you had on the JumpStart server isn't there on your
 sparc box.</p></div>
 <div class="listingblock">
@@ -1026,31 +1113,36 @@ Current status: installed</tt></pre>
 <div class="para"><p>Here, we have found that the <tt>less</tt> command comes from <tt>SUNWless</tt> package. You
 can go to the JumpStart template and add <tt>SUNWless</tt> to the
 <tt>base_config_profile_add_packages</tt> list.</p></div>
-<h3 id="_incorporating_csw_community_software_into_jumpstart">6.7. Incorporating CSW (Community Software) into JumpStart</h3><div style="clear:left"></div>
+<h3 id="_incorporating_opencsw_into_jumpstart">7.8. Incorporating OpenCSW into JumpStart</h3><div style="clear:left"></div>
 <div class="para"><p>When we're talking about making Solaris usable, we're not talking about the
 temporary, virtual one, we're talking about the one you're installing on the
 sparc box.</p></div>
 <div class="para"><p>One of the steps will be installing the <em>useful</em> software, stuff that is
 available from CSW. Generally, we know how to install it, but what we really
 want here, is having it installed as part of JumpStart procedure.</p></div>
-<div class="para"><p>First we need to figure the list of packages that we want, with dependencies.
-The easiest way to go at this, will consist of first installing all the CSW
-packages we want on the our JumpStart server. Read what's there, and note down
-which packages interest you. Of course, you can install them as well.</p></div>
+<div class="para"><p>First we need to figure the list of packages that we want, with dependencies.</p></div>
+<h3 id="_the_hard_way_manual_labor">7.9. The hard way: manual labor</h3><div style="clear:left"></div>
+<div class="para"><p>The simplet, although not the easiest way to go at this, will consist of first
+installing all the CSW packages we want on the our JumpStart server. Read what's
+there, and install all the packages that interest you.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>pkgutil --available | less
-pkgutil --install package_name</tt></pre>
+<pre><tt>pkg-get -a | less
+pkg-get -i package_name</tt></pre>
 </div></div>
-<div class="para"><p><tt>pkgutil</tt> will figure out and install all the dependencies. After you're done,
+<div class="para"><p><tt>pkg-get</tt> will figure out and install all the dependencies. After you're done,
 you can see the full list of CSW packages that have been installed.</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>pkginfo | gawk '$2 ~ /^CSW/ { print $2 }'</tt></pre>
 </div></div>
-<div class="para"><p><tt>pkgutil</tt> is able to create a <em>package stream</em> with all the dependencies in it.
-Here, we want to build package for sparc platform, even though we're working on
-an x86 right now.</p></div>
+<div class="para"><p>The next step would be to download all the listed packages from an OpenCSW
+mirror, and use <tt>pkgtrans</tt> to convert them to the directory format.</p></div>
+<h3 id="_the_easy_way_pkgutil">7.10. The easy way: pkgutil</h3><div style="clear:left"></div>
+<div class="para"><p>There's another utility, <tt>pkgutil</tt>. Issue <tt>pkg-get -i pkgutil</tt> to install it.
+<tt>pkgutil</tt> is able to create a <em>package stream</em> with all the dependencies in it.
+In our case, we need to build a package streeam for sparc platform, even though
+we're working on an x86 right now.</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>pkgutil -s --target=sparc:5.10 -o cswstuff.sparc.5.10.pkg \
@@ -1103,9 +1195,7 @@ CSWzsh
 </div></div>
 <div class="para"><p>Make sure that the word <tt>custom</tt> is included in <tt>base_config_products</tt>.
 Otherwise your custom packages won't be installed at all.</p></div>
-</div>
-<h2 id="_adding_custom_files_and_scripts">7. Adding custom files and scripts</h2>
-<div class="sectionbody">
+<h3 id="_adding_custom_files_and_scripts">7.11. Adding custom files and scripts</h3><div style="clear:left"></div>
 <div class="para"><p>JET allows to deploy a custom set of files. Read comments in the template for
 instructions. One trap I'va fallen into was that had all the settings in the
 custom section near the bottom of the template, but I didn't include the
@@ -1247,7 +1337,7 @@ it was, for the sake of future generations.  Please use the following address:</
 <div id="footer">
 <div id="footer-text">
 Version 26<br />
-Last updated 2009-03-05 08:51:23 IST
+Last updated 2009-03-08 11:08:35 IST
 </div>
 </div>
 </body>
