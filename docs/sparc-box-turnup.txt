@@ -280,24 +280,125 @@ after logging in, is starting bash.
 bash-3.00# █
 --------------------------------------------------------------------------------
 
-It's got sucky prompt by default, let's set it to something different.
+Enable remote root ssh logins for convenience (make sure you have a strong root
+password!). _I don't recommend enabling this for production systems._
+
+--------------------------------------------------------------------------------
+cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+sed < /etc/ssh/sshd_config.bak > /etc/ssh/sshd_config \
+	-e 's/PermitRootLogin no/PermitRootLogin yes/'
+svcadm restart ssh
+--------------------------------------------------------------------------------
+
+Now you can login via ssh and avoid working with the slow system console. It's
+also advisable to have more than one session open just in case something goes
+wrong. Go ahead and log in via ssh. (You need to start bash again.)
+
+Let's set root's home directory and default shell. It's been argued that having
+`/` as root's home directory is fine because you can always use `/var/tmp` for
+working files. Yet somehow I don't like the idea of having root's `.bashrc` and
+`.ssh` kept in filesystem's root.
+
+--------------------------------------------------------------------------------
+mkdir /root
+chmod 0700 /root
+chown root:root /root
+cp /etc/passwd /etc/passwd.bak
+sed < /etc/passwd.bak > /etc/passwd.new \
+  -e 's+root:x:0:0:Super-User:/:/sbin/sh+root:x:0:0:Super-User:/root:/bin/bash+'
+--------------------------------------------------------------------------------
+
+You can examine `/etc/passwd.new` to see if it contains the right thing. If it
+looks good, copy it to `/etc/passwd`.
+
+--------------------------------------------------------------------------------
+[[ -s /etc/passwd.new ]] && cp /etc/passwd.new /etc/passwd || echo "It's empty!"
+--------------------------------------------------------------------------------
+
+Let's set default paths.
+
+--------------------------------------------------------------------------------
+echo >> /etc/default/login \
+  "PATH=/opt/csw/sbin:/opt/csw/bin:/bin:/sbin:/usr/sbin:/usr/bin:\
+/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin:\
+/opt/SUNWspro/bin"
+
+echo >> /etc/default/login \
+  "SUPATH=/opt/csw/sbin:/opt/csw/bin:/bin:/sbin:/usr/sbin:/usr/bin:\
+/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin:\
+/opt/SUNWspro/bin"
+--------------------------------------------------------------------------------
+
+NOTE: The file `/etc/default/login` doesn't really follow shell syntax, and it's
+not meant to be sourced.
+
+It's useful to set `MANPATH` as well.
+
+--------------------------------------------------------------------------------
+echo >> /etc/profile \
+  "MANPATH=/opt/csw/share/man:/opt/SUNWjet/man:/usr/sfw/share/man\
+/opt/SUNWexplo/man:/opt/SUNWspro/man:/usr/share/man"
+echo >> /etc/profile "export MANPATH"
+--------------------------------------------------------------------------------
+
+Bash has got sucky prompt by default, let's set it to something different.
 
 // bash-3.00# PS1="\u@\h \w # "
 --------------------------------------------------------------------------------
-bash-3.00# PS1="\[\033[01;31m\]\h\[\033[01;34m\] \W \$\[\033[00m\] "
-root@vsol01 / # echo "PS1=\"$PS1\"" >> ~/.bashrc
+PS1="\[\033[01;31m\]\h\[\033[01;34m\] \W \$\[\033[00m\] "
+echo "PS1=\"$PS1\"" >> ~/.bashrc
+echo '[[ -r ~/.bashrc ]] && source ~/.bashrc' >> ~/.bash_profile
+--------------------------------------------------------------------------------
+
+Now the prompt should look like this:
+
+--------------------------------------------------------------------------------
 root@vsol01 / # █
 --------------------------------------------------------------------------------
 
-That's better. Now, the first thing you most probably want to do, is getting
-a set of GNU tools. Here, I recommend using OpenCSW repository.
+That's better. You can now log off (but keep your console session open just in
+case) and log in again to see if your `PATH` is set properly.
+
+OpenCSW
+-------
+
+Now, the first thing you most probably want to do, is getting a set of GNU
+tools. I recommend using OpenCSW repository, as it tends to have newer versions
+of packages.
+
+********************************************************************************
+TODO: OpenCSW website
+http://opencsw.org/bugtrack/view.php?id=2971[lacks instructions]
+on how to get started. Put something in here or encourage OpenCSW
+to write those instructions.
+********************************************************************************
 
 --------------------------------------------------------------------------------
 pkgadd -d http://ftp.heanet.ie/pub/opencsw/pkg_get.pkg all
 --------------------------------------------------------------------------------
 
-TODO: OpenCSW website lacks instructions on how to get started. Put something in
-here or encourage OpenCSW to write those instructions.
+Or, if you're closer to the US:
+
+--------------------------------------------------------------------------------
+pkgadd -d http://www.ibiblio.org/pub/solaris/opencsw/pkg_get.pkg all
+--------------------------------------------------------------------------------
+
+What if `wget` isn't installed
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+You need `wget` in order to use `pkg-get`. On a fresh Solaris installation, it
+should be located in `/usr/sfw/bin/wget`. If you don't have this binary, you
+need to find your installation media and install packages `SUNWwgetr` and
+`SUNWwgetu`. The packages are in the directory form, and they're located in
+`/path/to/media/Solaris_10/Product`. Copy `SUNWwgetr` and `SUNWwgetu` over to,
+say `/tmp` on your wgetless Solaris host and:
+
+--------------------------------------------------------------------------------
+pkgadd -d /tmp SUNWwgetr SUNWwgetu
+--------------------------------------------------------------------------------
+
+Continuing
+~~~~~~~~~~
 
 If you want to do any editing in vi and you're using GNU screen, you need to set
 your TERM variable into something that bare Solaris understands:
@@ -306,38 +407,34 @@ your TERM variable into something that bare Solaris understands:
 export TERM=xterm
 --------------------------------------------------------------------------------
 
-Let's set up some things:
+Let's set up few more things:
 
 --------------------------------------------------------------------------------
-echo >> /etc/opt/csw/pkgutil.conf \
-  "mirror=ftp://ftp.heanet.ie/pub/opencsw/unstable/"
+echo >> /etc/opt/csw/pkg-get.conf \
+  "url=ftp://ftp.heanet.ie/pub/opencsw/current/"
 
-echo >> /etc/default/login \
-  "PATH=/bin:/sbin:/usr/sbin:/usr/bin:/opt/csw/sbin:/opt/csw/bin:\
-/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin"
-
-echo >> /etc/default/login \
-  "SUPATH=/bin:/sbin:/usr/sbin:/usr/bin:/opt/csw/sbin:/opt/csw/bin:\
-/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin"
 --------------------------------------------------------------------------------
 
 Since we were setting up PATHs, you can logout and log back in.
 
 --------------------------------------------------------------------------------
-pkgutil --catalog
+pkg-get -U
 --------------------------------------------------------------------------------
 
 Now you can install all the software available from OpenCSW. Some of my first
 choices:
 
 --------------------------------------------------------------------------------
-pkgutil -i vim elinks findutils gawk ggrep gsed gtar wget rsync sudo screen mc
+pkg-get -i vim elinks findutils gawk ggrep gsed gtar wget rsync sudo screen mc
 updatedb &
 --------------------------------------------------------------------------------
 
 
-Installing JET, JumpStart Enterprise Toolkit
---------------------------------------------
+JET, JumpStart Enterprise Toolkit
+---------------------------------
+
+Installation
+~~~~~~~~~~~~
 
 Go to the JumpStart website, download the `jet.pkg.bz2` package and follow
 instructions. It's basically about installing the jet package, then copying
@@ -680,8 +777,8 @@ can go to the JumpStart template and add `SUNWless` to the
 `base_config_profile_add_packages` list.
 
 
-Incorporating CSW (Community Software) into JumpStart
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Incorporating OpenCSW into JumpStart
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 When we're talking about making Solaris usable, we're not talking about the
 temporary, virtual one, we're talking about the one you're installing on the
 sparc box.
@@ -702,25 +799,37 @@ rsync -v -rlptH --progress \
 ////////////////////////////////////////////////////////////////////////////////
 
 First we need to figure the list of packages that we want, with dependencies.
-The easiest way to go at this, will consist of first installing all the CSW
-packages we want on the our JumpStart server. Read what's there, and note down
-which packages interest you. Of course, you can install them as well.
+
+The hard way: manual labor
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The simplet, although not the easiest way to go at this, will consist of first
+installing all the CSW packages we want on the our JumpStart server. Read what's
+there, and install all the packages that interest you.
 
 --------------------------------------------------------------------------------
-pkgutil --available | less
-pkgutil --install package_name
+pkg-get -a | less
+pkg-get -i package_name
 --------------------------------------------------------------------------------
 
-`pkgutil` will figure out and install all the dependencies. After you're done,
+`pkg-get` will figure out and install all the dependencies. After you're done,
 you can see the full list of CSW packages that have been installed.
 
 --------------------------------------------------------------------------------
 pkginfo | gawk '$2 ~ /^CSW/ { print $2 }'
 --------------------------------------------------------------------------------
 
+The next step would be to download all the listed packages from an OpenCSW
+mirror, and use `pkgtrans` to convert them to the directory format.
+
+
+The easy way: pkgutil
+~~~~~~~~~~~~~~~~~~~~~
+
+There's another utility, `pkgutil`. Issue `pkg-get -i pkgutil` to install it.
 `pkgutil` is able to create a _package stream_ with all the dependencies in it.
-Here, we want to build package for sparc platform, even though we're working on
-an x86 right now.
+In our case, we need to build a package streeam for sparc platform, even though
+we're working on an x86 right now.
 
 --------------------------------------------------------------------------------
 pkgutil -s --target=sparc:5.10 -o cswstuff.sparc.5.10.pkg \
@@ -785,7 +894,7 @@ Otherwise your custom packages won't be installed at all.
 
 
 Adding custom files and scripts
--------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 JET allows to deploy a custom set of files. Read comments in the template for
 instructions. One trap I'va fallen into was that had all the settings in the
 custom section near the bottom of the template, but I didn't include the
