@@ -1,0 +1,24 @@
+<?xml version='1.0'?>
+<!DOCTYPE service_bundle SYSTEM '/usr/share/lib/xml/dtd/service_bundle.dtd.1'>
+<service_bundle type='manifest' name='export'>
+  <service name='system/cswcron' type='service' version='0'>
+    <single_instance/>
+    <dependency name='fs' grouping='require_all' restart_on='none' type='service'>
+      <service_fmri value='svc:/system/filesystem/local'/>
+    </dependency>
+    <dependency name='net' grouping='require_all' restart_on='none' type='service'>
+      <service_fmri value='svc:/network/loopback'/>
+    </dependency>
+    <exec_method name='start' type='method' exec='/opt/csw/lib/svc/method/svc-cswvixiecron start' timeout_seconds='30'>
+      <method_context/>
+    </exec_method>
+    <exec_method name='stop' type='method' exec='/opt/csw/lib/svc/method/svc-cswvixiecron stop' timeout_seconds='30'>
+      <method_context/>
+    </exec_method>
+    <instance name='default' enabled='true'>
+      <property_group name='general' type='framework'>
+        <propval name='package' type='astring' value='CSWvixiecron'/>
+      </property_group>
+    </instance>
+  </service>
+</service_bundle>
