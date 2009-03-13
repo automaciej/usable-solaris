@@ -1,0 +1,19 @@
+# /etc/crontab: system-wide crontab
+# 
+# $Id$
+#
+# Unlike any other crontab you don't have to run the `crontab'
+# command to install the new version when you edit this file.
+# This file also has a username field, that none of the other crontabs do.
+
+SHELL=/bin/bash
+PATH=/opt/csw/sbin:/opt/csw/bin:/sbin:/bin:/usr/sbin:/usr/bin
+MAILTO=root
+HOME=/
+
+# m h dom mon dow user  command
+0  *  * * *     root    rm -f /var/spool/cron/lastrun/cron.hourly
+1  3  * * *     root    rm -f /var/spool/cron/lastrun/cron.daily
+15 4  * * 6     root    rm -f /var/spool/cron/lastrun/cron.weekly
+30 5  1 * *     root    rm -f /var/spool/cron/lastrun/cron.monthly
+*/10  *  * * *  root    test -x /opt/csw/sbin/run-crons && /opt/csw/sbin/run-crons

@@ -1,0 +1,5 @@
+%var            bitname vixiecron
+%var            pkgname CSWvixiecron
+%include        url file://%{PKGLIB}/csw_dyndepend.gspec
+%var            SERVICE_CONF_FILES /etc/crontab
+%include        url file://%{PKGLIB}/smf_enabled.gspec

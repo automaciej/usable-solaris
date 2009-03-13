@@ -1,0 +1,29 @@
+#!/bin/sh
+# 
+# $Id$
+#
+# Note: it's going to be executed by /bin/sh no matter what.
+
+# Add group crontab if it doesn't exist
+if groupmod crontab >/dev/null; then
+  echo  # How to make a negation in /bin/sh?
+else
+  groupadd crontab
+fi
+
+# Prepare the directory for crontabs
+mkdir -p /var/spool/cron/crontabs
+chown root:crontab /var/spool/cron/crontabs
+chmod 1730 /var/spool/cron/crontabs
+
+# Suid bit is not picked up by GAR automatically. An 'artifact' is raised:
+# https://sourceforge.net/tracker2/?func=detail&aid=2679715&group_id=229205&atid=1075770
+chmod g+s /opt/csw/bin/crontab
+chown root:crontab /opt/csw/bin/crontab
+
+# Copy the configuration file if not already present
+if test ! -f /etc/crontab; then
+  cp /etc/crontab.CSW /etc/crontab
+fi
+
+
