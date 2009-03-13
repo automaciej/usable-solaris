@@ -34,11 +34,7 @@ BUILD_SCRIPTS =
 INSTALL_SCRIPTS = custom
 PREREQUISITE_PKGS = CSWcommon CSWruby
 
+install-custom:
+	(cd $(WORKSRC); ./install.rb --destdir=$(DESTDIR))
 
 include gar/category.mk
-
-install-custom:
-	$(WORKSRC)/install.rb --destdir=$(DESTDIR)
-
-install-custom-isa-sparcv8: install-custom
-
