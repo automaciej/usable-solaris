@@ -48,6 +48,8 @@ pre-install:
 
 pre-install-isa-sparcv9: pre-install
 pre-install-isa-sparcv8: pre-install
+pre-install-isa-i386: pre-install
+pre-install-isa-amd64: pre-install
 
 post-install:
 	ginstall -d $(DESTDIR)/etc
@@ -59,6 +61,8 @@ post-install:
 
 post-install-isa-sparcv8: post-install
 post-install-isa-sparcv9: post-install
+post-install-isa-i386: post-install
+post-install-isa-amd64: post-install
 
 
 include gar/category.mk
