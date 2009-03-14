@@ -1,0 +1,17 @@
+#!/bin/sh
+#
+# $Id$
+
+case "$1" in
+  start)
+    /opt/csw/sbin/cron -l
+    ;;
+
+  stop)
+    /usr/bin/pkill -z `zonename` '^cron$'
+    ;;
+  *)
+    echo "Usage: $0 { start | stop }"
+    exit 1
+    ;;
+esac
