@@ -1,3 +1,7 @@
+# Copyright 2009 OpenCSW
+# Distributed under the terms of the GNU General Public License v2
+# $Header: $
+
 GARNAME = portage
 GARVERSION = 2.1.6
 PATCHVER = 2.1.6.9
