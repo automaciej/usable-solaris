@@ -52,6 +52,18 @@ diff -ru portage-2.1.6.orig/bin/ebuild-helpers/dohtml portage-2.1.6/bin/ebuild-h
  # Copyright 1999-2006 Gentoo Foundation
  # Distributed under the terms of the GNU General Public License v2
  # $Id: dohtml 13063 2009-03-12 00:28:45Z zmedico $
+diff -ru portage-2.1.6.orig/bin/ebuild.sh portage-2.1.6/bin/ebuild.sh
+--- portage-2.1.6.orig/bin/ebuild.sh	2009-03-21 00:28:52.000000000 +0000
++++ portage-2.1.6/bin/ebuild.sh	2009-03-21 15:51:43.037193320 +0000
+@@ -1706,7 +1706,7 @@
+ if [ -n "${EBUILD_SH_ARGS}" ] && \
+ 	! hasq ${EBUILD_SH_ARGS} clean depend help info nofetch ; then
+ 
+-	if [ "$(id -nu)" == "portage" ] ; then
++	if [ "$(/opt/csw/bin/gid -nu)" == "portage" ] ; then
+ 		export USER=portage
+ 	fi
+ 
 diff -ru portage-2.1.6.orig/bin/emaint portage-2.1.6/bin/emaint
 --- portage-2.1.6.orig/bin/emaint	2008-11-24 01:41:15.000000000 +0000
 +++ portage-2.1.6/bin/emaint	2009-03-21 00:54:47.755411952 +0000
@@ -162,13 +174,45 @@ diff -ru portage-2.1.6.orig/bin/xpak portage-2.1.6/bin/xpak
  # $Id: xpak 5945 2007-02-10 21:43:35Z zmedico $
 diff -ru portage-2.1.6.orig/pym/_emerge/__init__.py portage-2.1.6/pym/_emerge/__init__.py
 --- portage-2.1.6.orig/pym/_emerge/__init__.py	2009-03-21 00:28:53.000000000 +0000
-+++ portage-2.1.6/pym/_emerge/__init__.py	2009-03-21 00:54:58.990228191 +0000
++++ portage-2.1.6/pym/_emerge/__init__.py	2009-03-21 11:44:34.532033847 +0000
 @@ -1,4 +1,4 @@
 -#!/usr/bin/python -O
 +#!/usr/bin/env python -O
  # Copyright 1999-2006 Gentoo Foundation
  # Distributed under the terms of the GNU General Public License v2
  # $Id: __init__.py 13127 2009-03-17 19:30:58Z zmedico $
+@@ -12284,9 +12284,9 @@
+ 				except OSError:
+ 					pass
+ 			if stat.S_ISDIR(mymode):
+-				mycommand = "find '%s' -name '.*' -type d -prune -o -name '._cfg????_*'" % x
++				mycommand = "gfind '%s' -name '.*' -type d -prune -o -name '._cfg????_*'" % x
+ 			else:
+-				mycommand = "find '%s' -maxdepth 1 -name '._cfg????_%s'" % \
++				mycommand = "gfind '%s' -maxdepth 1 -name '._cfg????_%s'" % \
+ 					os.path.split(x.rstrip(os.path.sep))
+ 			mycommand += " ! -name '.*~' ! -iname '.*.bak' -print0"
+ 			a = commands.getstatusoutput(mycommand)
+@@ -12457,8 +12457,8 @@
+ 				"control (contains %s).\n!!! Aborting rsync sync.\n") % \
+ 				(myportdir, vcs_dir), level=logging.ERROR, noiselevel=-1)
+ 			return 1
+-		if not os.path.exists("/usr/bin/rsync"):
+-			print "!!! /usr/bin/rsync does not exist, so rsync support is disabled."
++		if not os.path.exists("/opt/csw/bin/rsync"):
++			print "!!! /opt/csw/bin/rsync does not exist, so rsync support is disabled."
+ 			print "!!! Type \"emerge net-misc/rsync\" to enable rsync support."
+ 			sys.exit(1)
+ 		mytimeout=180
+@@ -12629,7 +12629,7 @@
+ 			if mytimestamp != 0 and "--quiet" not in myopts:
+ 				print ">>> Checking server timestamp ..."
+ 
+-			rsynccommand = ["/usr/bin/rsync"] + rsync_opts + extra_rsync_opts
++			rsynccommand = ["/opt/csw/bin/rsync"] + rsync_opts + extra_rsync_opts
+ 
+ 			if "--debug" in myopts:
+ 				print rsynccommand
 diff -ru portage-2.1.6.orig/pym/portage/tests/runTests portage-2.1.6/pym/portage/tests/runTests
 --- portage-2.1.6.orig/pym/portage/tests/runTests	2009-03-21 00:28:53.000000000 +0000
 +++ portage-2.1.6/pym/portage/tests/runTests	2009-03-21 00:54:55.109264983 +0000
