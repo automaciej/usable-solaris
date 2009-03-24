@@ -7,16 +7,18 @@ set -u
 
 do_host() {
   local h="$1"
+  echo -n "${h}... "
   if [[ ! -s "${h}.pkginfo" ]]; then
-    echo -n "pkginfo ${h}... "
+    echo -n "pkginfo... "
     ssh "$h" pkginfo -l > "$h.pkginfo"
-    echo done
+    echo -n "done. "
   fi
   if [[ ! -s "${h}.showrev" ]]; then
-    echo -n "showrev ${h}... "
+    echo -n "showrev... "
     ssh "$h" showrev -p > "$h.showrev"
-    echo done
+    echo -n "done. "
   fi
+  echo
 }
 
 get_data_from_file() {
@@ -25,3 +27,9 @@ get_data_from_file() {
     do_host "${h}"
   done
 }
+
+main() {
+  get_data_from_file "$1"
+}
+
+main "$@"

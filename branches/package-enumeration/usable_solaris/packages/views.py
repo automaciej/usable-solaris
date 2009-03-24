@@ -131,7 +131,8 @@ def package_report(request):
         'machines': machines,
         'except_machines': except_machines,
         'print_machines': len(machines) < 10 and len(machines) > 0,
-        'print_except_machines': len(except_machines) < 10 and len(except_machines) > 0,
+        'print_except_machines': (len(except_machines) < 10
+                                  and len(except_machines) > 0),
     }
   dicts_with_packages = [GetDict(x) for x in packages]
   # By the number of installations

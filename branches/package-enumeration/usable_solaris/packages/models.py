@@ -47,6 +47,11 @@ class Package(models.Model):
 class PackageVersion(models.Model):
     package = models.ForeignKey(Package)
     version = models.CharField(max_length=200)
+    def other_package_versions(self):
+        return self.package.packageversion_set.exclude(id=self.id)
+    def machines_with_other_versions(self):
+        return Machine.objects.filter(
+            packageinstallation__package_version__in=self.package.packageversion_set.exclude(id=self.id))
     def __unicode__(self):
         return "%s-%s" % (self.package, self.version)
     class Meta:
@@ -73,6 +78,19 @@ class PackageInstallation(models.Model):
     inst_date = models.CharField(max_length=200)
     status = models.CharField(max_length=200)
     arch = models.CharField(max_length=32)
+    def machines_with_the_same_version(self):
+        return self.package_version.packageinstallation_set.all()
+    def status_summary(self):
+        """Returns a dict with more information about the installation."""
+        d = {}
+        all_machines = Machine.objects.all()
+        machines_same_version = self.machines_with_the_same_version()
+        machines_with_other_versions = self.package_version.machines_with_other_versions()
+        d['machines_with_other_versions'] = machines_with_other_versions
+        d['all_machines'] = all_machines
+        d['not_popular'] = (len(machines_with_other_versions) > len(machines_same_version))
+        d['no_other_versions'] = (len(machines_with_other_versions) == 0)
+        return d
     def __unicode__(self):
         return "%s on %s" % (self.package_version, self.machine)
     class Meta:

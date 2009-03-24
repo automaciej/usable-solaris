@@ -7,16 +7,45 @@ Machine detail:  {{ object }}
 {% block main_data %}
 <a href="../">Back to machine list</a>
 <h2>{{ object }}</h2>
-  <ul>
+  <table>
+  <tr>
+    <th>pkginst</th>
+    <th>version</th>
+    <th><acronym title="Number of machines">#m</acronym></th>
+    <th>date of inst</th>
+    <th>
+      <acronym title="Number of machines with other versions">#om</acronym>
+    </th>
+  </tr>
   {% for package_installation in object.packageinstallation_set.all %}
-  <li>
+  <tr>
+    <td>
     <a href="{{ package_installation.package_version.package.get_absolute_url }}">
       {{ package_installation.package_version.package.pkginst }}</a>
-    <b>{{ package_installation.package_version.version }}</b>
-    <span style="color: gray;">
-      (installed on {{ package_installation.inst_date }})
-    </span>
-  </li>
+    </td>
+    <td>
+      <b>{{ package_installation.package_version.version }}</b>
+    </td>
+    <td>
+      <strong>{{ package_installation.machines_with_the_same_version.count }}</strong>
+    </td>
+    <td>
+      <span style="color: gray;">
+        {{ package_installation.inst_date }}
+      </span>
+    </td>
+    <td style="{% if package_installation.status_summary.not_popular %}font-weight: bold; color: red; background-color: #FEE;{% endif %}{% if package_installation.status_summary.no_other_versions %}background-color: lightgreen;{% endif %} text-align: right;">
+      {{ package_installation.status_summary.machines_with_other_versions.count }}
+    </td>
+  </tr>
   {% endfor %}
-</ul>
+</table>
+
+<h2>Installed patches</h2>
+
+{% for patch_installation in object.patchinstallation_set.all %}
+  <a href="{{ patch_installation.patch.get_absolute_url }}">{{ patch_installation.patch }}</a>
+  &nbsp;
+{% endfor %}
+
 {% endblock %}
