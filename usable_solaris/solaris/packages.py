@@ -231,8 +231,44 @@ class ConexpWriter(object):
     return "".join(output)
 
 
+class DataExporter(object):
+
+  def GenerateObjectAttribute(self):
+    output_list = ["% Generated with usable-solaris tools"]
+    machines = pkgm.Machine.objects.order_by('fqdn')
+    packages = pkgm.Package.objects.order_by(
+            'pkginst')
+    package_installations = pkgm.PackageInstallation.objects.order_by(
+        'machine__fqdn',
+        'package_version__package__pkginst')
+    logging.debug("Generating table.")
+    table = []
+    pkg_inst_pos = 0
+    pkg_inst_pos_max = len(package_installations) - 1
+    for machine in machines:
+        row = {}
+        row['machine'] = machine
+        installation_list = []
+        for package in packages:
+            pkg_inst = package_installations[pkg_inst_pos]
+            if (machine.id == pkg_inst.machine.id and
+                    pkg_inst.package_version.package.id == package.id):
+                installation_list.append(unicode(pkg_inst.package_version.package.pkginst))
+                if pkg_inst_pos < pkg_inst_pos_max:
+                    pkg_inst_pos += 1
+        row['package_installations'] = installation_list
+        table.append(row)
+    for row in table:
+      line = u"%s: %s ;" % (
+          row['machine'],
+          " ".join(row['package_installations']),
+      )
+      output_list.append(line)
+    return u"\n".join(output_list)
+
+
 def main():
-    print "Please use package classes."
+    print "Please classes defined in this package."
 
 
 if __name__ == "__main__":
