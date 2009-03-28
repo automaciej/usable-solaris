@@ -1,0 +1,6 @@
+OpenCSW catalog parser usage:
+
+To get the AST:
+
+import import_catalog as ic
+ast = ic.CatalogImporter().GetAst()
