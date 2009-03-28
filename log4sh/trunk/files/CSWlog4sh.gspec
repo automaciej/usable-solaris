@@ -1,4 +1,0 @@
-%var            bitname log4sh
-%var            pkgname CSWlog4sh
-%include        url file://%{PKGLIB}/csw_dyndepend.gspec
-%copyright      url file://%{WORKSRC}/doc/LGPL-2.1
