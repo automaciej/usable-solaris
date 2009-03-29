@@ -3,31 +3,23 @@
 # $Id$
 #
 
-# TODO: Parametrize or automate this.
-ZPOOL_NAME=puddle
-NETMASK="255.255.255.0"
-GATEWAY="192.168.3.2"
-DNS_SERVER="192.168.3.2"
-
-echo >&2 "Please edit this script, make your settings and remove the next line."
-exit 1
-
 ################################################################################
-## Do not modify below this line.
+## Do not modify below this line. (Unless you're fixing a bug.)
 ################################################################################
-#
-# (Unless you're fixing a bug.)
-#
+
+set -u
+set -e
 
 function usage {
-	echo "create-zone.sh -z <zone-name>"
+	echo "$0 -z <zone-name>"
 }
 
 while getopts z: o
 do
 	case "$o" in
 		z)	ZONE_NAME="$OPTARG" ;;
-		h)	usage;;
+		h)	usage
+			exit 0;;
 	esac
 done
 
@@ -40,16 +32,47 @@ then
 	exit 1
 fi
 
-export ZONE_IP="$(dig +short $ZONE_NAME)"
+ZONE_IP="$(dig +short $ZONE_NAME)"
 if [[ -z "${ZONE_IP}" ]]
 then
 	echo "No IP known for ${ZONE_NAME}"
 	exit 1
 fi
-export ZONE_IF="$(ifconfig -a4 | grep -v 'LOOPBACK' | grep '^[a-z]' | cut -d: -f1 | head -1)"
+
+# Checks for dependencies
+for c in python dig; do
+	if [[ -z "$(type -p ${c})" ]]; then
+		echo "${c} is missing."
+		exit 1
+	fi
+done
+
+ZONE_IF="$(ifconfig -a4 | grep -v 'LOOPBACK' | grep '^[a-z]' | cut -d: -f1 | head -1)"
+ZPOOL_NAME=$(zpool list -Ho name)
+ZONE_PATH="/zones/${ZONE_NAME}"
+hex_netmask=$(ifconfig ${ZONE_IF} | awk '/netmask/ { print $4 }')
+python_netmask="print \".\".join(map(lambda n: str((0x${hex_netmask} & (0xff << (8 * n))) / 2 ** (8 * n)), reversed(range(4))))"
+NETMASK=$(python -c "${python_netmask}")
+GATEWAY="$(netstat -r -n -f inet | grep ^default | awk '{print $2}')"
+DNS_SERVER="$(grep ^nameserver < /etc/resolv.conf  | awk '{print $2}')"
+
+# TODO: Variable validation would be useful here.
+# TODO: Variable review would be useful here.
+cat <<EOF
+Zone settings:
+  name:              ${ZONE_NAME}
+  zpool:             ${ZPOOL_NAME}
+  zone path:         ${ZONE_PATH}
+  network interface: ${ZONE_IF}
+  ip address:        ${ZONE_IP}
+  netmask:           ${NETMASK}
+  gateway:           ${GATEWAY}
+  dns:               ${DNS_SERVER}
+EOF
+read -p "Press any key to continue." JUNK
 
 [[ ! -d "/${ZPOOL_NAME}/zones" ]] && zfs create ${ZPOOL_NAME}/zones
-[[ ! -d "/${ZPOOL_NAME}/zones/${ZONE_NAME}" ]] && zfs create "${ZPOOL_NAME}/zones/${ZONE_NAME}"
+[[ ! -d "${ZONE_PATH}" ]] && zfs create "${ZPOOL_NAME}${ZONE_PATH}"
 
 zonecfg="${ZONE_NAME}.zonecfg"
 sysidcfg="${ZONE_NAME}.sysidcfg"
@@ -65,12 +88,15 @@ set zonepath=/zones/${ZONE_NAME}
 add dataset
 set name=${ZPOOL_NAME}/zones/${ZONE_NAME}
 end
+add inherit-pkg-dir
+set dir=/opt
+end
 verify
 commit
 exit
 EOF
 
-zonecfg -z "${ZONE_NAME}" -f ${zonecfg}
+zonecfg -z "${ZONE_NAME}" -f "${zonecfg}"
 zoneadm -z "${ZONE_NAME}" install
 
 # sysidcfg:
@@ -80,18 +106,12 @@ timezone=Europe/Dublin
 terminal=xterms
 security_policy=NONE
 root_password=boajrOmU7GFmY
-timeserver=0.europe.pool.ntp.org
-nameservice=DNS {
-domain_name=home.blizinski.pl
-name_server=${DNS_SERVER}
-search=home.blizinski.pl }
+timeserver=localhost
+nameservice=NONE
 nfs4_domain=dynamic
 network_interface=PRIMARY {
-hostname=${ZONE_NAME}
-ip_address=${ZONE_IP}
-netmask=${NETMASK}
-protocol_ipv6=yes
-default_route=$GATEWAY}
+	hostname=${ZONE_NAME}
+}
 EOF
 
 cp ${sysidcfg} /zones/${ZONE_NAME}/root/etc/sysidcfg
