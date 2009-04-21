@@ -1,6 +1,7 @@
 import antlr3
 import logging
 import operator
+import os
 import subprocess
 import usable_solaris.packages.models as pkgm
 
@@ -17,15 +18,25 @@ except ImportError, e:
   raise
 
 
+class ParsingError(Exception):
+  pass
+
+
 class MachineEnumerator(object):
 
   def __init__(self, fqdn):
     self.fqdn = fqdn
     self.ast = None
 
+  def __repr__(self):
+    return "MachineEnumerator(fqdn=%s)" % repr(self.fqdn)
+
   def GetAst(self):
     if not self.ast:
       filename = "%s.pkginfo" % self.fqdn
+      source_stat_result = os.stat(filename)
+      if not source_stat_result.st_size:
+        raise ParsingError("File %s has zero length" % filename)
       input_stream = open(filename, "r")
       char_stream = antlr3.ANTLRInputStream(input_stream)
       lexer = pkginfoLexer(char_stream)
@@ -46,8 +57,11 @@ class MachineEnumerator(object):
 
     http://tinyurl.com/kxubn
     """
-    ast = self.GetAst()
-    self.PopulateDatabase(ast)
+    try:
+      ast = self.GetAst()
+      self.PopulateDatabase(ast)
+    except ParsingError, e:
+      logging.warning("Could not parse %s: %s", self, e)
 
   def PopulateDatabase(self, ast):
     logging.debug("Populating database...")
