@@ -5,18 +5,26 @@
 
 set -u
 
+host_ok() {
+  ping -c 1 "$1" >/dev/null
+}
+
 do_host() {
   local h="$1"
   echo -n "${h}... "
-  if [[ ! -s "${h}.pkginfo" ]]; then
-    echo -n "pkginfo... "
-    ssh "$h" pkginfo -l > "$h.pkginfo"
-    echo -n "done. "
-  fi
-  if [[ ! -s "${h}.showrev" ]]; then
-    echo -n "showrev... "
-    ssh "$h" showrev -p > "$h.showrev"
-    echo -n "done. "
+  if host_ok "${h}"; then
+    if [[ ! -s "${h}.pkginfo" ]]; then
+      echo -n "pkginfo... "
+      ssh "$h" pkginfo -l > "$h.pkginfo"
+      echo -n "done. "
+    fi
+    if [[ ! -s "${h}.showrev" ]]; then
+      echo -n "showrev... "
+      ssh "$h" showrev -p > "$h.showrev"
+      echo -n "done. "
+    fi
+  else
+    echo >&2 "Can't ping ${h}"
   fi
   echo
 }
