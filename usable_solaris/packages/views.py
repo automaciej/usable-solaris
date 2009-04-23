@@ -90,6 +90,8 @@ def old_packages(request):
     ver_with_max_installations = verss_with_max_installations[0][0]
     other_verss = filter(lambda x: x != ver_with_max_installations,
                          versions)
+    other_verss = filter(lambda x: x.packageinstallation_set.count() > 0,
+                         versions)
     debug = other_verss
     pkg_data['pkg'] = pkg
     pkg_data['other_verss'] = other_verss
