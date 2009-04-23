@@ -34,7 +34,10 @@ class MachineEnumerator(object):
   def GetAst(self):
     if not self.ast:
       filename = "%s.pkginfo" % self.fqdn
-      source_stat_result = os.stat(filename)
+      try:
+        source_stat_result = os.stat(filename)
+      except OSError, e:
+        raise ParsingError("Could not stat %s: %s" % (repr(filename), e))
       if not source_stat_result.st_size:
         raise ParsingError("File %s has zero length" % filename)
       input_stream = open(filename, "r")
