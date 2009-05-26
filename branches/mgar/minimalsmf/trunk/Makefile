@@ -26,3 +26,5 @@ install-minimalsmf:
 	ginstall -d $(DESTDIR)
 	ginstall -d $(DESTDIR)$(bindir)
 	ginstall -m 755 files/sleeping-beauty $(DESTDIR)$(bindir)
+	ginstall -d $(DESTDIR)$(libdir)/svc/method
+	ginstall -m 755 files/svc-cswminimalsmf $(DESTDIR)$(libdir)/svc/method/cswminimalsmf
