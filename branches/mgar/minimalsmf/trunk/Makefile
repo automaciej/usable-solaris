@@ -8,15 +8,12 @@ define BLURB
 endef
 
 ARCHALL = 1
-MASTER_SITES = 
+MASTER_SITES =
 DISTFILES  = sleeping-beauty
 DISTFILES += $(call admfiles,CSWminimalsmf,)
 DISTFILES += csw$(GARNAME) csw$(GARNAME).xml svc-csw$(GARNAME)
 
-REQUIRED_PKGS = CSWcswclassutils
-SPKG_CLASSES = none cswinitsmf
-PROTOTYPE_FILTER  = awk '$$$$3 ~ /\/init.d\/cswminimalsmf$$$$/ { $$$$2 = "cswinitsmf" } { print }'
-
+INITSMF = /opt/csw/etc/init.d/cswminimalsmf
 
 CONFIGURE_SCRIPTS =
 BUILD_SCRIPTS =
@@ -29,4 +26,3 @@ install-minimalsmf:
 	ginstall -d $(DESTDIR)
 	ginstall -d $(DESTDIR)$(bindir)
 	ginstall -m 755 files/sleeping-beauty $(DESTDIR)$(bindir)
-
