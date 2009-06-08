@@ -77,6 +77,7 @@ def patch_matrix(request):
 def old_packages(request):
   pkgs = []
   for pkg in  pkgm.Package.objects.all():
+  # for pkg in  pkgm.Package.objects.all()[:10]:
     pkg_data = {}
     # Find the most popular installation of this package.
     versions = pkg.packageversion_set.all()
@@ -91,7 +92,7 @@ def old_packages(request):
     other_verss = filter(lambda x: x != ver_with_max_installations,
                          versions)
     other_verss = filter(lambda x: x.packageinstallation_set.count() > 0,
-                         versions)
+                         other_verss)
     debug = other_verss
     pkg_data['pkg'] = pkg
     pkg_data['other_verss'] = other_verss
