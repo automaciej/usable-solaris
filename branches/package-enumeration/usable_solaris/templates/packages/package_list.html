@@ -6,9 +6,20 @@ Package list
 
 {% block main_data %}
 <h2>Packages</h2>
-<ul>
+<table>
+  <tr>
+    <th>pkginst</th>
+    <th>description</th>
+  </tr>
   {% for object in object_list %}
-  <li><a href="{{ object.get_absolute_url }}">{{ object }}</a></li>
+  <tr>
+    <td>
+      <a href="{{ object.get_absolute_url }}">{{ object }}</a>
+    </td>
+    <td>
+      {{ object.name }}
+    </td>
+  </tr>
   {% endfor %}
 </ul>
 

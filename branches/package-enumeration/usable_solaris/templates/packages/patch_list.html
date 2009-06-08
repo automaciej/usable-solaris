@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block title %}
+Patch list
+{% endblock %}
+
+{% block main_data %}
+<h2>A gigantic list of all patches ever seen</h2>
+<ul style="list-style: none;">
+  {% for object in object_list %}
+  <li style="float: left; padding: 4px;">
+    <a href="{{ object.get_absolute_url }}">{{ object }}
+      ({{ object.patchinstallation_set.count }})
+    </a>
+  </li>
+  {% endfor %}
+</ul>
+
+{% endblock %}

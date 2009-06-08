@@ -7,6 +7,9 @@ Old packages
 
 {% block main_data %}
 <h1>Old packages</h1>
+<p>
+  <a href="#about"><i>Description</i></a>
+</p>
 <table>
 <tr>
   <th>Package name</th>
@@ -17,19 +20,26 @@ Old packages
 {% if pkg_data.package_ok %}
 {% else %}
 <tr>
-  <td>
-<a href="{{ pkg_data.pkg.get_absolute_url }}">{{ pkg_data.pkg }}</a>
+  <td style="font-size: 110%;">
+    <a href="{{ pkg_data.pkg.get_absolute_url }}">{{ pkg_data.pkg }}</a>
+  </td>
+  <td style="text-align: center;">
+    <span style="font-weight: bold; font-size: 110%;">{{ pkg_data.popular_ver.version }}</span>
+    <br />
+    <span style="color: gray;">
+      ({{ pkg_data.popular_count }} installations)
+    </span>
   </td>
   <td>
-    {{ pkg_data.popular_ver }}
-    ({{ pkg_data.popular_count }} installations)</li>
-  </td>
-  <td>
-    <ul>
+    <ul style="list-style: none;">
       {% for other_pkg in pkg_data.other_verss %}
       <li>
-        {{ other_pkg.packageinstallation_set.count }}
-        of
+        <strong>
+          {{ other_pkg.packageinstallation_set.count }}
+        </strong>
+        <span style="color: gray;">
+          of
+        </span>
         {{ other_pkg.version }}
       </li>
       {% endfor %}
@@ -39,4 +49,13 @@ Old packages
 {% endif %}
 {% endfor %}
 </table>
+
+<a name="about">&nbsp;</a>
+
+<h2>Description</h2>
+<p>
+  This report shows packages that have more than 1 version installed.
+  If there's only one version of the package installed on indexed hosts,
+  the package is not shown here.
+</p>
 {% endblock %}
