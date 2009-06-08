@@ -22,7 +22,19 @@ class ParsingError(Exception):
   pass
 
 
-class MachineEnumerator(object):
+class EnumeratorBase(object):
+
+  def CheckFileExists(self, file_name):
+    try:
+      source_stat_result = os.stat(file_name)
+    except OSError, e:
+      raise ParsingError("Could not stat %s: %s" % (repr(file_name), e))
+    if not source_stat_result.st_size:
+      raise ParsingError("File %s has zero length" % file_name)
+
+
+
+class MachineEnumerator(EnumeratorBase):
 
   def __init__(self, fqdn):
     self.fqdn = fqdn
@@ -34,12 +46,7 @@ class MachineEnumerator(object):
   def GetAst(self):
     if not self.ast:
       filename = "%s.pkginfo" % self.fqdn
-      try:
-        source_stat_result = os.stat(filename)
-      except OSError, e:
-        raise ParsingError("Could not stat %s: %s" % (repr(filename), e))
-      if not source_stat_result.st_size:
-        raise ParsingError("File %s has zero length" % filename)
+      self.CheckFileExists(filename)
       input_stream = open(filename, "r")
       char_stream = antlr3.ANTLRInputStream(input_stream)
       lexer = pkginfoLexer(char_stream)
@@ -129,14 +136,14 @@ class DatabasePopulator(object):
       me.Executify()
       logging.debug("patches of %s..." % fqdn)
       pe = PatchEnumerator(fqdn)
-      pe.PopulateDatabase()
+      pe.Run()
 
   def ProcessFile(self, filename):
     self.ReadMachines(filename)
     self.DoMachines(self.machines)
 
 
-class PatchEnumerator(object):
+class PatchEnumerator(EnumeratorBase):
 
   def __init__(self, fqdn):
     self.fqdn = fqdn
@@ -145,6 +152,7 @@ class PatchEnumerator(object):
   def GetAst(self):
     if not self.ast:
       filename = "%s.showrev" % self.fqdn
+      self.CheckFileExists(filename)
       input_stream = open(filename, "r")
       char_stream = antlr3.ANTLRInputStream(input_stream)
       lexer = showrevLexer(char_stream)
@@ -153,8 +161,14 @@ class PatchEnumerator(object):
       self.ast = parser.showrev()
     return self.ast
 
-  def PopulateDatabase(self):
-    ast = self.GetAst()
+  def Run(self):
+    try:
+      ast = self.GetAst()
+      self.PopulateDatabase(ast)
+    except ParsingError, e:
+      logging.warning("Could not parse %s: %s", self, e)
+
+  def PopulateDatabase(self, ast):
     tree = ast.tree
     machine, _ = pkgm.Machine.objects.get_or_create(fqdn=self.fqdn)
     for patch_ast in tree.children:
