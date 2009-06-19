@@ -99,9 +99,20 @@ class PackageInstallation(models.Model):
 
 
 class Patch(models.Model):
+    number_1 = models.IntegerField(unique=True)
+    slug = models.SlugField(unique=True)
+    def __unicode__(self):
+        return u"%s" % self.number_1
+    def get_absolute_url(self):
+        return "/solaris/patches/%s/" % self.number_1
+    class Meta:
+        ordering = ["number_1"]
+        verbose_name_plural = "patches"
+
+class PatchRevision(models.Model):
     name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(unique=True)
-    number_1 = models.IntegerField()
+    patch = models.ForeignKey(Patch)
     number_2 = models.IntegerField()
     obsoletes = models.ManyToManyField(
         "self", related_name="obsoleted_by",
@@ -117,11 +128,11 @@ class Patch(models.Model):
     def get_absolute_url(self):
         return "/solaris/patches/%s/" % self.slug
     class Meta:
-        ordering = ["number_1", "number_2"]
+        ordering = ["patch", "number_2"]
         verbose_name_plural = "patches"
 
 class PatchInstallation(models.Model):
-    patch = models.ForeignKey(Patch)
+    patch_revision = models.ForeignKey(PatchRevision)
     machine = models.ForeignKey(Machine)
     def __unicode__(self):
       return u"%s on %s" % (self.patch, self.machine)

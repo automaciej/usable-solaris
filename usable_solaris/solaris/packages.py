@@ -74,7 +74,7 @@ class MachineEnumerator(EnumeratorBase):
       logging.warning("Could not parse %s: %s", self, e)
 
   def PopulateDatabase(self, ast):
-    logging.debug("Populating database...")
+    logging.debug("PopulateDatabase(%s)", self.fqdn)
     machine, _ = pkgm.Machine.objects.get_or_create(fqdn=self.fqdn)
     package_installation_ids = set()
     for package in self.ast.tree.children:
@@ -131,10 +131,10 @@ class DatabasePopulator(object):
 
   def DoMachines(self, machines):
     for fqdn in machines:
-      logging.debug("packages of %s..." % fqdn)
+      logging.debug("%s: packages" % fqdn)
       me = MachineEnumerator(fqdn)
       me.Executify()
-      logging.debug("patches of %s..." % fqdn)
+      logging.debug("%s: patches" % fqdn)
       pe = PatchEnumerator(fqdn)
       pe.Run()
 
@@ -187,79 +187,95 @@ class PatchEnumerator(EnumeratorBase):
         logging.warn(e)
         continue
       number_1, number_2 = [int(x) for x in patch_name.split("-")]
-      patch, _ = pkgm.Patch.objects.get_or_create(name=patch_name,
+      patch, _ = pkgm.Patch.objects.get_or_create(number_1=number_1,
+              defaults={'number_1': number_1,
+                        'slug': unicode(number_1)})
+      patch.save()
+      patch_revision, _ = pkgm.PatchRevision.objects.get_or_create(name=patch_name,
               defaults={
-                  'number_1': number_1,
+                  'name': patch_name,
+                  'patch': patch,
                   'number_2': number_2,
                   'slug': patch_name, })
       patch_installation, _ = pkgm.PatchInstallation.objects.get_or_create(
-                  patch=patch, machine=machine)
+                  patch_revision=patch_revision, machine=machine)
       # Packages
       for package_ast in packages_ast.children:
         pkginst = package_ast.text
         pkg = pkgm.Package.objects.get(pkginst=pkginst)
-        patch.packages.add(pkg)
+        patch_revision.packages.add(pkg)
       # Obsoleted patches
       for obsoleted_patch_ast in obsoletes_ast.children:
         obsoleted_patch_name = obsoleted_patch_ast.text
         number_1, number_2 = [int(x)
                               for x in obsoleted_patch_name.split("-")]
         obsoleted_patch, _ = pkgm.Patch.objects.get_or_create(
+            number_1=number_1, defaults={
+                'number_1': number_1,
+                'slug': unicode(number_1)})
+        obsoleted_patch_revision, _ = pkgm.PatchRevision.objects.get_or_create(
             name=obsoleted_patch_name, defaults={
-              'number_1': number_1,
+              'name': obsoleted_patch_name,
+              'patch': obsoleted_patch,
               'number_2': number_2,
               'slug': obsoleted_patch_name, })
-        patch.obsoletes.add(obsoleted_patch)
+        patch_revision.obsoletes.add(obsoleted_patch_revision)
       for required_patch_ast in requires_ast.children:
         required_patch_name = required_patch_ast.text
         number_1, number_2 = [int(x)
                               for x in required_patch_name.split("-")]
         required_patch, _ = pkgm.Patch.objects.get_or_create(
+            number_1=number_1, defaults={
+                'number_1': number_1,
+                'slug': unicode(number_1)})
+        required_patch_revision, _ = pkgm.PatchRevision.objects.get_or_create(
             name=required_patch_name, defaults={
-                  'number_1': number_1,
+                  'name': required_patch_name,
+                  'patch': required_patch,
                   'number_2': number_2,
                   'slug': required_patch_name, })
-        patch.requires.add(required_patch)
+        patch_revision.requires.add(required_patch_revision)
 
 
-class ConexpWriter(object):
-
-  def GeneratePatchMatrixCxt(self):
-    """Produces conexp format.
-
-    http://conexp.sf.net/
-    """
-    output = ["B\n\n"]
-    logging.debug("GeneratePatchMatrixCxt() started")
-    machines = pkgm.Machine.objects.all()
-    output.append("%s\n" % len(machines))
-    patches = pkgm.Patch.objects.all()
-    output.append("%s\n" % len(patches))
-    output.append("\n")
-    for machine in machines:
-      output.append("%s\n" % machine)
-    for patch in patches:
-      output.append("%s\n" % patch)
-    patch_installations = pkgm.PatchInstallation.objects.all()
-    logging.debug("Created QuerySets")
-    duplet_generator = (
-            (x.machine.fqdn,
-             x.patch.name)
-            for x in patch_installations)
-    logging.debug("Generator done, creating the set.")
-    patch_installation_index = set(duplet_generator)
-    logging.debug("Set ready. Generating table.")
-    table = []
-    for machine in machines:
-      for patch in patches:
-        duplet = (machine.fqdn,
-                  patch.name)
-        if duplet in patch_installation_index:
-          output.append("X")
-        else:
-          output.append(".")
-      output.append("\n")
-    return "".join(output)
+# Need to be updated to understand PatchRevision
+# class ConexpWriter(object):
+#
+#   def GeneratePatchMatrixCxt(self):
+#     """Produces conexp format.
+#
+#     http://conexp.sf.net/
+#     """
+#     output = ["B\n\n"]
+#     logging.debug("GeneratePatchMatrixCxt() started")
+#     machines = pkgm.Machine.objects.all()
+#     output.append("%s\n" % len(machines))
+#     patches = pkgm.Patch.objects.all()
+#     output.append("%s\n" % len(patches))
+#     output.append("\n")
+#     for machine in machines:
+#       output.append("%s\n" % machine)
+#     for patch in patches:
+#       output.append("%s\n" % patch)
+#     patch_installations = pkgm.PatchInstallation.objects.all()
+#     logging.debug("Created QuerySets")
+#     duplet_generator = (
+#             (x.machine.fqdn,
+#              x.patch.name)
+#             for x in patch_installations)
+#     logging.debug("Generator done, creating the set.")
+#     patch_installation_index = set(duplet_generator)
+#     logging.debug("Set ready. Generating table.")
+#     table = []
+#     for machine in machines:
+#       for patch in patches:
+#         duplet = (machine.fqdn,
+#                   patch.name)
+#         if duplet in patch_installation_index:
+#           output.append("X")
+#         else:
+#           output.append(".")
+#       output.append("\n")
+#     return "".join(output)
 
 
 class DataExporter(object):

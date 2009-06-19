@@ -6,49 +6,12 @@ Patch detail:  {{ object }}
 
 {% block main_data %}
 <h2>Patch {{ object }}</h2>
-<form action="http://sunsolve.sun.com/getpatch.do" method="post">
-  <input type="submit" value="Find in sunsolve" />
-  <input type="hidden" name="documentId" value="{{ object.name }}" />
-</form>
-{% if object.obsoleted_by.all %}
-<p> <strong>OBSOLETED</strong>
-(by {% for p in object.obsoleted_by.all %}<a href="{{ p.get_absolute_url }}">{{ p }}</a> {% endfor %})
-</p>
-{% endif %}
-{% if object.obsoletes.all %}
-<p> Obsoletes:
-{% for p in object.obsoletes.all %}
-{% if p.patchinstallation_set.count %}
-<a href="{{ p.get_absolute_url }}">{{ p }}</a>
-({{ p.patchinstallation_set.count }})
-{% else %}
-<a href="{{ p.get_absolute_url }}" style="color: AAA;">{{ p }}</a>
-{% endif %}
-{% endfor %}
-</p>
-{% endif %}
-{% if object.requires.all %}
-<p> Requires:
-{% for p in object.requires.all %}<a href="{{ p.get_absolute_url }}">{{ p }}</a> {% endfor %}
-</p>
-{% endif %}
-{% if object.required_by.all %}
-<p> Required by:
-{% for p in object.required_by.all %}<a href="{{ p.get_absolute_url }}">{{ p }}</a> {% endfor %}
-</p>
-{% endif %}
-<p>Patch installed on {{ object.patchinstallation_set.count }} machines:</p>
+{% if object.patchrevision_set %}
+<h3>Revisions</h3>
 <ul>
-  {% for patchinstallation in object.patchinstallation_set.all %}
-  <li><a href="{{ patchinstallation.machine.get_absolute_url }}">
-    {{ patchinstallation.machine }}</a></li>
+  {% for patchrevision in object.patchrevision_set.all %}
+  <li><a href="{{ patchrevision.get_absolute_url }}">{{ patchrevision }}</li>
   {% endfor %}
 </ul>
-<p>Patch applies to packages:</p>
-<ul>
-  {% for package in object.packages.all %}
-  <li><a href="{{ package.get_absolute_url }}">
-    {{ package }}</a></li>
-  {% endfor %}
-</ul>
+{% endif %}
 {% endblock %}

@@ -25,7 +25,7 @@ Package detail:  {{ object }}
 </ul>
 <h3 style="clear: both;">Patches applying to this package</h3>
 <ul>
-{% for patch in object.patch_set.all %}
+{% for patch in object.patchrevision_set.all %}
 <li style="bullet-style: none;">
   <a href="{{ patch.get_absolute_url }}">{{ patch }}</a>
 </li>
