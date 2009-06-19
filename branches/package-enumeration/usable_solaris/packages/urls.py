@@ -4,6 +4,7 @@ from django.views.generic.list_detail import object_list
 from usable_solaris.packages.models import Machine
 from usable_solaris.packages.models import Package
 from usable_solaris.packages.models import Patch
+from usable_solaris.packages.models import PatchRevision
 import usable_solaris.packages.views
 
 urlpatterns = patterns('',
@@ -23,9 +24,12 @@ urlpatterns = patterns('',
         { 'queryset': Package.objects.all()}),
     (r'^patches/$', 'django.views.generic.list_detail.object_list',
         { 'queryset': Patch.objects.all()}),
-    (r'^patches/(?P<slug>[-\w]+)/$',
+    (r'^patches/(?P<slug>\d+)/$',
         'django.views.generic.list_detail.object_detail',
         { 'queryset': Patch.objects.all()}),
+    (r'^patches/(?P<slug>\d+-\d+)/$',
+        'django.views.generic.list_detail.object_detail',
+        { 'queryset': PatchRevision.objects.all()}),
     (r'^package-matrix/$', 'usable_solaris.packages.views.package_matrix'),
     (r'^patch-matrix/$', 'usable_solaris.packages.views.patch_matrix'),
     (r'^old-packages/$', 'usable_solaris.packages.views.old_packages'),

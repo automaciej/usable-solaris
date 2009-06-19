@@ -10,7 +10,9 @@ Patch list
   {% for object in object_list %}
   <li style="float: left; padding: 4px;">
     <a href="{{ object.get_absolute_url }}">{{ object }}
+      {% comment %}
       ({{ object.patchinstallation_set.count }})
+      {% endcomment %}
     </a>
   </li>
   {% endfor %}
