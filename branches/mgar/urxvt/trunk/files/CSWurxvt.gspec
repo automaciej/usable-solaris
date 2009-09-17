@@ -1,4 +1,0 @@
-%var            bitname urxvt
-%var            pkgname CSWurxvt
-%include        url file://%{PKGLIB}/csw_dyndepend.gspec
-%copyright      url file://%{WORKSRC}/COPYING

@@ -1,6 +1,0 @@
-%var		bitname minimalsmf
-%var		pkgname CSWminimalsmf
-%include        url file://%{PKGLIB}/csw_dyndepend.gspec
-%include	url file://%{PKGLIB}/smf_enabled.gspec
-%var		SERVICE_NAME cswminimalsmf
-%var            SERVICE_CONF_FILES /etc/foo
