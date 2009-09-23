@@ -1,4 +1,3 @@
-import antlr3
 import logging
 import operator
 import os
@@ -6,6 +5,12 @@ import subprocess
 import usable_solaris.packages.models as pkgm
 
 logging.basicConfig(level=logging.DEBUG)
+
+try:
+  import antlr3
+except ImportError, e:
+  logging.fatal("You need to install ANTLR runtime libraries.")
+  logging.fatal("http://www.antlr.org/download/Python")
 
 try:
   from pkginfoParser import pkginfoParser
