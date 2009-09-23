@@ -105,17 +105,6 @@ def old_packages(request):
     'debug': debug,
     })
 
-def not_installed(request, object_id):
-  pkg = pkgm.Package.objects.get(pk=object_id)
-  # Find all the machines on which any version of the package isn't installed
-  pkg_versions = pkg.packageversion_set.all()
-  machines = pkgm.Machine.objects.exclude(
-      packageinstallation__package_version__package__id=object_id)
-  return render_to_response("packages/not_installed.html", {
-    'object': pkg,
-    'machines': machines,
-    })
-
 def package_report(request):
   packages = pkgm.Package.objects.all()
   def GetDict(package):

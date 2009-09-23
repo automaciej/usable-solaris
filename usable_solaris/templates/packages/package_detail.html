@@ -23,7 +23,24 @@ Package detail:  {{ object }}
   </li>
   {% endfor %}
 </ul>
-<h3 style="clear: both;">Patches applying to this package</h3>
+
+{% if object.not_installed_on_machines %}
+<h3 style="clear: both; padding-top: 1em;">Not installed on</h3>
+<p>No version of {{ object }} is installed on:</p>
+<ul style="list-style-type: none; padding-left: 1em;">
+  {% for machine in object.not_installed_on_machines %}
+  <li style="float: left; width: 20em;">
+    <a href="{{ machine.get_absolute_url }}">{{ machine }}</a>
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p>{{ object }}
+is installed on all machines.</p>
+{% endif %}
+
+{% if object.patchrevision_set.all %}
+<h3 style="clear: both; padding-top: 1em;">Patches applying to this package</h3>
 <ul>
 {% for patch in object.patchrevision_set.all %}
 <li style="bullet-style: none;">
@@ -31,11 +48,7 @@ Package detail:  {{ object }}
 </li>
 {% endfor %}
 </ul>
-<h3>See also</h3>
-<ul>
-  <li>
-    <a href="{{ object.get_not_installed_url }}">Package not installed
-    on...</a>
-  </li>
-</ul>
+{% endif %}
+
+
 {% endblock %}
