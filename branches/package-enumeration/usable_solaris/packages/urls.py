@@ -34,7 +34,5 @@ urlpatterns = patterns('',
     (r'^patch-matrix/$', 'usable_solaris.packages.views.patch_matrix'),
     (r'^old-packages/$', 'usable_solaris.packages.views.old_packages'),
     (r'^package-report/$', 'usable_solaris.packages.views.package_report'),
-    (r'^not-installed/(?P<object_id>[0-9]+)/$', 'usable_solaris.packages.'
-                                                'views.not_installed'),
     (r'^$', 'usable_solaris.packages.views.index'),
 )

@@ -38,8 +38,12 @@ class Package(models.Model):
         return self.pkginst
     def get_absolute_url(self):
         return "/solaris/packages/%s/" % self.slug
-    def get_not_installed_url(self):
-        return "/solaris/not-installed/%s/" % self.id
+    def not_installed_on_machines(self):
+        # Find all the machines on which any version of the package isn't installed
+        pkg_versions = self.packageversion_set.all()
+        machines = Machine.objects.exclude(
+            packageinstallation__package_version__package__id=self.id)
+        return  machines
     class Meta:
         ordering = ["pkginst"]
 
