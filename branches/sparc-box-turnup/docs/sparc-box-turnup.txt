@@ -276,7 +276,7 @@ system, but let's get a little more comfortable here.  The first thing I do
 after logging in, is starting bash.
 
 --------------------------------------------------------------------------------
-# bash
+# bash -l
 bash-3.00# █
 --------------------------------------------------------------------------------
 
@@ -292,7 +292,23 @@ svcadm restart ssh
 
 Now you can login via ssh and avoid working with the slow system console. It's
 also advisable to have more than one session open just in case something goes
-wrong. Go ahead and log in via ssh. (You need to start bash again.)
+wrong.
+
+To find out your IP address:
+
+--------------------------------------------------------------------------------
+ifconfig -a
+--------------------------------------------------------------------------------
+
+Go ahead and log in via ssh. (You need to start bash again.)
+
+--------------------------------------------------------------------------------
+$ ssh root@<ip-address>
+(...)
+Sun Microsystems Inc.   SunOS 5.10      Generic January 2005
+# bash -l
+bash-3.00# █
+--------------------------------------------------------------------------------
 
 Let's set root's home directory and default shell. It's been argued that having
 `/` as root's home directory is fine because you can always use `/var/tmp` for
@@ -312,7 +328,16 @@ You can examine `/etc/passwd.new` to see if it contains the right thing. If it
 looks good, copy it to `/etc/passwd`.
 
 --------------------------------------------------------------------------------
-[[ -s /etc/passwd.new ]] && cp /etc/passwd.new /etc/passwd || echo "It's empty!"
+[[ -s /etc/passwd.new ]] && cp /etc/passwd.new /etc/passwd || echo "It's empty."
+--------------------------------------------------------------------------------
+
+If you can now log off, as these changes require re-login to take
+effect.  It's a good moment to set up authentication using ssh keys.
+From the system where your keys live, execute a command along these
+lines:
+
+--------------------------------------------------------------------------------
+ssh-copy-id -i ~/.ssh/id_dsa.pub root@<ip-address>
 --------------------------------------------------------------------------------
 
 Let's set default paths.
@@ -362,9 +387,9 @@ case) and log in again to see if your `PATH` is set properly.
 OpenCSW
 -------
 
-Now, the first thing you most probably want to do, is getting a set of GNU
-tools. I recommend using OpenCSW repository, as it tends to have newer versions
-of packages.
+Now, the first thing you most probably want to do, is getting a set of
+GNU tools. I recommend using the OpenCSW package repository, as it tends
+to have the most up to date versions of packages.
 
 ********************************************************************************
 TODO: OpenCSW website
@@ -380,13 +405,13 @@ pkgadd -d http://ftp.heanet.ie/pub/opencsw/pkg_get.pkg all
 Or, if you're closer to the US:
 
 --------------------------------------------------------------------------------
-pkgadd -d http://www.ibiblio.org/pub/solaris/opencsw/pkg_get.pkg all
+pkgadd -d http://mirror.opencsw.org/opencsw/pkgutil-`uname -p`.pkg
 --------------------------------------------------------------------------------
 
 What if `wget` isn't installed
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-You need `wget` in order to use `pkg-get`. On a fresh Solaris installation, it
+You need `wget` in order to use `pkgutil`. On a fresh Solaris installation, it
 should be located in `/usr/sfw/bin/wget`. If you don't have this binary, you
 need to find your installation media and install packages `SUNWwgetr` and
 `SUNWwgetu`. The packages are in the directory form, and they're located in
@@ -410,24 +435,33 @@ export TERM=xterm
 Let's set up few more things:
 
 --------------------------------------------------------------------------------
-echo >> /etc/opt/csw/pkg-get.conf \
-  "url=ftp://ftp.heanet.ie/pub/opencsw/current/"
+echo >> /etc/opt/csw/pkgutil.conf \
+  "mirror=ftp://ftp.heanet.ie/pub/opencsw/current"
 
 --------------------------------------------------------------------------------
 
-Since we were setting up PATHs, you can logout and log back in.
+Since we were setting up PATHs, logout and log back in for your changes
+to take effect.
 
 --------------------------------------------------------------------------------
-pkg-get -U
+pkgutil -U
 --------------------------------------------------------------------------------
 
 Now you can install all the software available from OpenCSW. Some of my first
 choices:
 
 --------------------------------------------------------------------------------
-pkg-get -i vim elinks findutils gawk ggrep gsed gtar wget rsync sudo screen mc
-updatedb &
+pkgutil -y -i vim elinks findutils gawk ggrep gsed gtar wget rsync sudo \
+	screen mc
 --------------------------------------------------------------------------------
+
+To initialize the findutils database:
+
+--------------------------------------------------------------------------------
+gupdatedb &
+--------------------------------------------------------------------------------
+
+Your preliminary setup is now complete.
 
 
 JET, JumpStart Enterprise Toolkit
