@@ -274,7 +274,7 @@ Preliminary setup
 We won't be spending _too_ much time on this, because it's only an intermediate
 system, but let's get a little more comfortable here.
 
-Please refer to links:solaris-10-preliminary-setup.html[Solaris 10
+Please refer to link:solaris-10-preliminary-setup.html[Solaris 10
 preliminary setup].
 
 JET, JumpStart Enterprise Toolkit
