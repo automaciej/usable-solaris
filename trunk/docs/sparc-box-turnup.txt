@@ -1,33 +1,215 @@
 Turning up a sparc box
 ======================
+Maciej Bliziński
+$Id$
 
 So, you've got this sparc machine you're planning to play with, right?
 
 Has it got any CD-ROM? No? Uh oh, you'll need to do some fiddling to get the OS
-there.  Your best bet is the network.
+there.  Your best bet is the network.  I assume you already have an x86 box, and
+your network layout looks similar to this one:
+
+--------------------------------------------------------------------------------
++----------+                        +------------+
+| x86 box ------(192.168.1.0/24)------ sparc-box |
++----------+                        +------------+
+--------------------------------------------------------------------------------
+
+Serial port
+-----------
 
 First, you will need to get access to your sparc machine via a serial port. If
 it is a Netra (as mine happens to be), you may need to craft your own special
-serial cable. Otherwise, a standard cable such as those used with Cisco routers
-will do.
+serial cable (see links at the bottom). Otherwise, a standard cable such as
+those used with Cisco routers will do. You'll probably use an USB serial
+adapter. You'll have a two-path connection to the sparc box.
+
+--------------------------------------------------------------------------------
++-(x86 box)------+                               +-(sparc box)-------+
+|                |                               |                   |
+|         [eth0] |                               | [hme0]            |
+|	       [RJ45] ----(192.168.1.0/24)---- [RJ45]                |
+|                |                               |                   |
+| [/dev/ttyUSB0] |                               | [/dev/ttya]       |
+|              [USB] -----(serial cable)------ [serial port]         |
++----------------+                               +-------------------+
+--------------------------------------------------------------------------------
+
+After you connect the USB serial adapter, you should see a new device:
+`/dev/ttyUSB0`. You can connect to it using minicom, which is a popular serial
+communication program, but you can as well use GNU screen.
+
+--------------------------------------------------------------------------------
+stty -F /dev/ttyUSB0 9600
+screen /dev/ttyUSB0
+--------------------------------------------------------------------------------
+
+At first, you'll see an empty screen. Tap ENTER and you should see something
+like this:
+
+--------------------------------------------------------------------------------
+lom> █
+--------------------------------------------------------------------------------
+
+LOM, the Ligths Out Manager, has a simple command-line interface. Type `help` to
+learn more about its functionality.
+
+
+JumpStart overview
+------------------
 
 To get Solaris installed on your sparc box, you need to use something called
 JumpStart, or JumpStart Enterprise Toolkit, referred to as JET. It runs on...
-Solaris! Haven't we got a chicken and egg problem here? Well, yes, we have, but
-you can first install Solaris on a virtual machine, install JET on it, and boot
-your sparc box off it. Alternatively, you could get to understand how JumpStart
-works and set it up on GNU/Linux, but I think it's a nice excuse to have one
-more Solaris installation and use this set of dodgy shell scripts, because that
-what JET essentially is, to set up JumpStart for you.
+Solaris! Haven't we got a chicken and egg problem here? Well, yes, we have.
 
-I've tried running Solaris on kvm, and got it sort of installed, but it didn't
-really want to run.  My best experiences were with VirtualBox, which is now
-a Sun in-house product, so it's important for them, for political reasons
-I guess, that it runs Solaris smoothly.
+One way around it would be to install Solaris off a DVD on a physical x86 box
+and then use it to install Solaris over the network. I didn't have an extra x86
+box laying around, so I decided to install Solaris on a virtual machine.
 
-NOTE: Your virtual machine _must_ be L2-adjacent to your sparc box. In other
+Alternatively, you could get to understand how JumpStart works and set it up on
+GNU/Linux. JumpStart is really a collection of RARP, BOOTP, TFTP and NFS stuff,
+there's nothing preventing you from setting them all up. However, I think that
+installing Solaris and using JET has a much more flat learning curve.
+
+NOTE: Sun like to distort the common symbol for Intel architecture, `x86`.  You
+may see capitalized `X86` or `i86pc` (huh?). I have no idea why is that. I'll
+keep calling it the usual way: `x86`.
+
+If we're going the virtual machine route, the diagram will look more like this:
+
+--------------------------------------------------------------------------------
++-(x86 box)------------------+                         +-(sparc box)-----------+
+|                            |                         |                       |
+| GNU/Linux                  |                         | (No OS yet)           |
+|                            |                         |                       |
+| +-(virtual machine)--+     |                         |                       |
+| |                    |     |                         |                       |
+| | Solaris            |     |                         |                       |
+| |             [e1000g0]-+  |                         |                       |
+| |                    |  |  |                         |                       |
+| +--------------------+  |  |                         |                       |
+|                         |  |                         |                       |
+|                    [vbox0] |                         |                       |
+|                         |  |                         |                       |
+|                [br0]----+  |                         |                       |
+|                         |  |                         |                       |
+|                     [eth0] |                         | [hme0]                |
+|	                 [RJ45] --(192.168.1.0/24)-- [RJ45]                    |
+|                            |                         |                       |
+|             [/dev/ttyUSB0] |                         | [/dev/ttya]           |
+|                         [USB] ---(serial cable)--- [serial port]             |
+|                            |                         |                       |
++----------------------------+                         +-----------------------+
+--------------------------------------------------------------------------------
+
+NOTE: Your virtual machine must be L2-adjacent to your sparc box. In other
 words, it must be in the same subnet (say, `192.168.0.1/24`). It's because
-JumpStart uses RARP, which cannot be routed.
+JumpStart uses RARP, which cannot be routed.  For the same reason, you need to
+use bridged networking for your virtual machine.  If you use NAT, RARP will not
+work.
+
+
+Installing VirtualBox
+---------------------
+
+I tried running Solaris with few different hypervisors. I got it sort of
+installed on kvm, but it didn't really want to run.  My best experiences were
+with VirtualBox, which is now a Sun product, so it's important for them, for
+political reasons I guess, that it runs Solaris smoothly. Browse the source
+code and look into the `scripts/vbox` directory.
+
+VirtualBox website has instructions on how to install VirtualBox; they provide
+Ubuntu package repository, which you can add to your `/etc/apt/sources.list`.
+
+Their instructions miss one piece of information: to install kernel modules,
+you'll need an additional package with kernel headers:
+
+--------------------------------------------------------------------------------
+sudo aptitude install linux-headers-$(uname -r)
+--------------------------------------------------------------------------------
+
+You need to use bridged networking with your virtual machine. On Ubuntu, the
+network configuration should look like this:
+
+.`/etc/network/interfaces`
+--------------------------------------------------------------------------------
+# The loopback network interface
+auto lo
+iface lo inet loopback
+
+# The primary network interface
+iface br0 inet dhcp
+bridge_ports eth0
+
+auto eth0
+auto br0
+--------------------------------------------------------------------------------
+
+Create virtual hard disk for the virtual machine.
+
+--------------------------------------------------------------------------------
+VBoxManage createvdi -filename /path/to/file.vdi -size 16384
+--------------------------------------------------------------------------------
+
+Create the virtual machine and make settings.
+
+--------------------------------------------------------------------------------
+VBoxManage createvm -name yourvmname -register
+VBoxManage modifyvm yourvmname \
+	-ostype Solaris \
+	-memory 512m \
+	-acpi off \
+	-hda /path/to/file.vdi \
+	-nic1 hostif \
+	-hostifdev1 vbox0 \
+	-nictype1 82540EM \
+	-cableconnected1 on \
+	-nicspeed1 10000 \
+	-vrdp on \
+	-vrdpport 3990 \
+	-boot1 dvd
+--------------------------------------------------------------------------------
+
+NOTE: Give your virtual machine 16GB of disk at minimum. You will want to cram
+some DVD images on it, plus their extracted form. Of course, you can always
+create an additional disk and attach it afterwards, but it's better to save
+hassle.
+
+Take a look at the `vrdp` setting. It tells VirtualBox to expose virtual
+machine's console via rdesktop protocol. If you're running VirtualBox locally,
+you can connect to a running virtual machine with:
+
+--------------------------------------------------------------------------------
+rdesktop localhost:3990
+--------------------------------------------------------------------------------
+
+If you're running VirtualBox on a remote machine, you can create an ssh tunnel
+and use it:
+
+--------------------------------------------------------------------------------
+ssh -f -N -C -L 3990:localhost:3990 remotemachine
+rdesktop localhost:3990
+--------------------------------------------------------------------------------
+
+
+Installing Solaris
+------------------
+Get the DVD ISO image from Sun's website. You need to register, but the download
+is free.
+
+'Insert' your ISO image into the virtual machine.
+
+--------------------------------------------------------------------------------
+VBoxManage modifyvm yourvmname -dvd /path/to/solaris.iso
+--------------------------------------------------------------------------------
+
+Start the virtual machine.
+
+--------------------------------------------------------------------------------
+VBoxManage startvm yourvmname
+--------------------------------------------------------------------------------
+
+And run rdesktop.
 
 I won't go into much detail of how to install Solaris on a virtual machine. Just
 a couple of hints.
@@ -36,9 +218,6 @@ a couple of hints.
   installs tons of stuff you won't use. It would be good to avoid installing X,
   KDE and the like, but if you choose any smaller set of packages, you won't
   have even bash. Ouch.
-* Give your virtual machine about 16GB of disk. You will want to cram some DVD
-  images on it, plus their extracted form. You can always create an additional
-  disk and attach it afterwards, but it's better to save hassle.
 * After Solaris is installed, you get a shiny blue Sun-branded graphical login.
   Don't be tempted to use it! Just to tip you off, `root` user home directory is
   by default `/` (the root directory), and the default desktop environment is
@@ -83,77 +262,26 @@ Usage: grep -hblcnsviw pattern file . . .
 # █
 --------------------------------------------------------------------------------
 
-There's some work you need to do before you can do stuff. Like, _actually_ work,
-as opposed to just staring at a blinking cursor and thinking how awesome it is
-to have a real Unix running in front of you. (What does it mean anyway, a _real_
-Unix? I never figured that out.)
+There's some work you need to do before you can _actually_ work, as opposed to
+just staring at a blinking cursor and thinking how awesome it is to have a real
+Unix running in front of you. (What does it mean anyway, a _real_ Unix? I never
+figured that out.)
+
 
 Preliminary setup
 -----------------
 
 We won't be spending _too_ much time on this, because it's only an intermediate
-system, but let's get a little more comfortable here.  The first thing I do
-after logging in, is starting bash.
+system, but let's get a little more comfortable here.
 
---------------------------------------------------------------------------------
-# bash
-bash-3.00# █
---------------------------------------------------------------------------------
-
-It's got sucky prompt by default, let's set it to something different.
-
---------------------------------------------------------------------------------
-bash-3.00# PS1="\u@\h \w # "
-root@vsol01 / # echo 'PS1="\u@\h \w # "' >> ~/.bashrc
-root@vsol01 / # █
---------------------------------------------------------------------------------
-
-That's better. Now, the first thing you most probably want to do, is getting
-a set of GNU tools. Here, I recommend using blastwave repository. Go to
-Blastwave website and follow instructions _How to use Blastwave_.
-
-If you want to do any editing in vi and you're using GNU screen, you need to set
-your TERM variable into something that bare Solaris understands:
-
---------------------------------------------------------------------------------
-root@vsol01 / # export TERM=xterm
---------------------------------------------------------------------------------
-
-Let's set up some things:
-
---------------------------------------------------------------------------------
-echo >> /etc/opt/csw/pkgutil.conf \
-  "mirror=ftp://ftp.heanet.ie/mirrors/blastwave.org/unstable/"
-
-echo >> /etc/default/login \
-  "PATH=/bin:/sbin:/usr/sbin:/usr/bin:/opt/csw/sbin:/opt/csw/bin:\
-/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin"
-
-echo >> /etc/default/login \
-  "PATH=/bin:/sbin:/usr/sbin:/usr/bin:/opt/csw/sbin:/opt/csw/bin:\
-/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin"
---------------------------------------------------------------------------------
-
-Since we were setting up PATHs, you can logout and log back in.
-
---------------------------------------------------------------------------------
-pkgutil --catalog
---------------------------------------------------------------------------------
-
-Now you can install all the software available from Blastwave. Some of my first
-choices:
-
-* vim
-* gtar
-* wget
-* elinks
-* screen
-* findutils (and running `gupdatedb &`)
-* tree
-* rsync
+Please refer to link:solaris-10-preliminary-setup.html[Solaris 10
+preliminary setup].
 
 JET, JumpStart Enterprise Toolkit
 ---------------------------------
+
+Installation
+~~~~~~~~~~~~
 
 Go to the JumpStart website, download the `jet.pkg.bz2` package and follow
 instructions. It's basically about installing the jet package, then copying
@@ -196,46 +324,197 @@ GNU/Linux, while Solaris client expects NFS 4. You'll be getting rather
 unhelpful error messages. Edit `/etc/default/nfs` on Solaris and set client max
 NFS version to 3. Then try mounting again.
 
-JumpStart template
-~~~~~~~~~~~~~~~~~~
-
-Now, let's make a template. First, it's best if you have your hostname
-configured in DNS and RevDNS. If your host is, say `netra`, and `netra` resolves
-in your DNS, JET will pick up the IP address and put it into the template.
-
-A _template_ in JET is not so much a template, at least from your perspective.
-It is a template in a sense, that it's used to generate configuration for
-jumpstart, the underlying technology, which is really a collection of RARP, TFTP
-and NFS stuff.
-
---------------------------------------------------------------------------------
-cd /opt/SUNWjet/Templates
-make_template netra base_config sds jass sbd custom explo zones zfs
-vim netra
---------------------------------------------------------------------------------
-
-Before you can `make_client`, make sure that `/export/install` is exported via
-NFS:
+Make sure that `/export/install` is exported via NFS:
 
 --------------------------------------------------------------------------------
 share -o ro,anon=0 /export/install
 shareall
 --------------------------------------------------------------------------------
 
+NOTE: You can't have `/export/install` mounted via NFS. If you do, JET needs to
+export it and you can't export something that is a remote mount. You need to
+have it on a local disk.
+
+What is a template
+~~~~~~~~~~~~~~~~~~
+
+A _template_ in JET is not so much a template, at least from your perspective.
+It is a template in a sense, that it's used to generate configuration for
+jumpstart, the underlying technology, which is really a collection of RARP, TFTP
+and NFS stuff.
+
+It's best if you have your hostname configured in DNS and RevDNS. If your host
+is, say `sparcbox`, and `sparcbox` resolves in your DNS, JET will pick up the IP
+address and put it into the template.
+
+Making one
+~~~~~~~~~~
+Now, let's make it.
+
+--------------------------------------------------------------------------------
+cd /opt/SUNWjet/Templates
+make_template sparcbox base_config sds sbd custom zfs
+--------------------------------------------------------------------------------
+
 Editing the template
 ~~~~~~~~~~~~~~~~~~~~
 
-Now, you can edit the file named `netra` (or whatever is the name of your
+Now, you can edit the file named `sparcbox` (or whatever is the name of your
 machine).
 
-TODO: Elaborate more on templates.
-
 --------------------------------------------------------------------------------
-make_client -f netra
+vim sparcbox
 --------------------------------------------------------------------------------
 
-If this command fails you'll notice it quite easily. The good side is it prints
-useful error messages.
+JumpStart templates have very good comments. Read through them and you'll get
+a good idea what to put where. I'll only point out more important bits and some
+gotchas.
+
+Bits you need to edit:
+
+Architecture type
+^^^^^^^^^^^^^^^^^
+Which architecture you need, can be looked up in comments. Mine was `sun4u`.
+
+--------------------------------------------------------------------------------
+base_config_ClientArch=sun4u
+base_config_ClientEther=XX.XX.XX.XX.XX.XX
+base_config_ClientOS=10_U6_SPARC
+--------------------------------------------------------------------------------
+
+The `10_U6_SPARC` bit should match what was used in `copy_solaris_media`.
+
+JumpStart sysidcfg information
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+When specifying `base_config_sysidcfg_nameservice`, you need to enclose the
+whole thing in quotes.
+
+--------------------------------------------------------------------------------
+base_config_sysidcfg_nameservice="DNS { domain_name=(...) }"
+--------------------------------------------------------------------------------
+
+Disk labeling
+^^^^^^^^^^^^^
+--------------------------------------------------------------------------------
+base_config_label_disks="all"
+base_config_profile_fdisk="alldisk"
+--------------------------------------------------------------------------------
+
+JumpStart profile information
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+`SUNWCuser` is selected by default. We won't need all that on the sparc box, and
+we'll learn how to pick and choose packages we want. `SUNWCreq` gives a much
+lighter OS base. (In a sense that it installs less packages.)
+
+--------------------------------------------------------------------------------
+base_config_profile_cluster=SUNWCreq
+--------------------------------------------------------------------------------
+
+Disk slices
+^^^^^^^^^^^
+
+We'll create two slices of equal size. I picked 4096MB, but you might want
+something smaller or bigger, depending on the size of your hard drive. The idea
+is that there are 'root' and 'alt root' partitions, both of equal size. They
+can be used later with Live Upgrade, which allows OS patching without going into
+single user mode and thus reducing system downtime.
+
+I'm not creating separate `/usr` or `/var` mountpoints, for simplicity.
+
+.JumpStart template diff
+--------------------------------------------------------------------------------
+@@ -330,8 +330,8 @@
+
+ base_config_profile_dontuse=""
+
+-base_config_profile_root=free
+-base_config_profile_swap=2048
++base_config_profile_root=4096
++base_config_profile_swap=1024
+
+ #
+ # If you are using VxVM and want your boot disk to look like the mirror, then
+@@ -343,15 +343,15 @@
+ #
+
+ base_config_profile_s3_mtpt=""
+-base_config_profile_s3_size=""
++base_config_profile_s3_size="free"
+
+ base_config_profile_s4_mtpt=""
+ base_config_profile_s4_size=""
+
+-base_config_profile_s5_mtpt="/var"
+-base_config_profile_s5_size=""
++base_config_profile_s5_mtpt=""
++base_config_profile_s5_size="4096"
+
+-base_config_profile_s6_mtpt="/usr"
++base_config_profile_s6_mtpt=""
+ base_config_profile_s6_size=""
+
+ #
+@@ -360,7 +360,7 @@
+ # please avoid using s7 for data!
+ #
+
+-base_config_profile_s7_mtpt="/opt"
++base_config_profile_s7_mtpt=""
+ base_config_profile_s7_size=""
+ #
+ ############
+--------------------------------------------------------------------------------
+
+Additional packages and clusters
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------------------------------------------------------
+base_config_profile_add_packages="SUNWman SUNWless SUNWdoc SUNWtoo SUNWrcmdc"
+base_config_profile_add_clusters="SUNWCfwshl SUNWCssh SUNWCipf SUNWCacc
+SUNWCadm SUNWCkrb5 SUNWCnfsc SUNWCnfss SUNWCmpapi SUNWCdtrace SUNWCvld
+SUNWCdhcp SUNWCgcc SUNWCjv SUNWCjvx SUNWClu SUNWCnca SUNWCbdb SUNWCcpc
+SUNWCmd SUNWCmda SUNWCmco SUNWCopenssl SUNWCsmba SUNWCutf8 SUNWCwbem
+SUNWCwget SUNWCzfs SUNWCzone SUNWCpool"
+--------------------------------------------------------------------------------
+
+Strings spanning multiple lines will work fine.
+
+SDS -- disk mirror
+^^^^^^^^^^^^^^^^^^
+JumpStart can allow to create a mirrored root in a very easy way. All you need
+is two disks of the same size and knowing which one is going to be the mirror.
+
+--------------------------------------------------------------------------------
+@@ -818,7 +849,7 @@
+ # partitions for you, but you will have to populate the sds_database_*
+ # variables if you want a metadb to exist on the root mirror.
+ #
+-sds_root_mirror=""
++sds_root_mirror="c0t1d0"
+ # You MUST set fmthard=yes for Solaris 9 and above.
+ sds_use_fmthard="yes"
+
+--------------------------------------------------------------------------------
+
+_(In my case, the mirror had to be `c0t0d0`, as `c0t1d0` was the primary disk.)_
+
+It's perfectly save to skip this part during the first install and figure out
+which disk is which on a live system. Then you can go back to this place and
+enter the name of the mirror disk.
+
+make_client
+~~~~~~~~~~~
+When your template is ready, you can `make_client`, which means that JET scripts
+will pick up stuff that you enclosed in the template and configure JumpStart.
+
+--------------------------------------------------------------------------------
+make_client sparcbox
+--------------------------------------------------------------------------------
+
+_If you run it multiple times, you need to add the `-f` flag._
+
+If this command fails you'll notice it quite easily, as it printd a huge banner
+with the word 'FAILED'. Apart from the banner, it prints useful error messages.
 
 Launching the installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -274,15 +553,235 @@ This step should be entirely automatic. From `boot net - install`, you should go
 straight to the `login:` prompt. If you're being asked installation questions
 such as network configuration or time, something's missing from your jumpstart
 template. You still _can_ get your machine installed that way, it's just not
-fully automatic.
+fully automatic. Go back to the template and try to find settings relevant to
+the questions you've been asked. A common problem is that the sparc box couldn't
+find the NTP server.
+
+When installation is complete, you'll see something like this:
+
+--------------------------------------------------------------------------------
+JumpStart is complete @ Monday  9 February 2009 08:51:40 GMT
+sparcbox console login: █
+--------------------------------------------------------------------------------
+
+Congratulations! You've got Solaris installed! You can now play around and see
+how sparc hardware is different from x86. Look at commands beginning with `prt`,
+as they print out various bits of information.
+
+Ah, wait, the root password. Right. It's:
+
+--------------------------------------------------------------------------------
+newroot
+--------------------------------------------------------------------------------
+
+It's JumpStart's default. Go ahead and change it.
+
+This is just the first iteration of JumpStart install. You will probably want to
+change some things in the template and reinstall your machine, and keep
+repeating that until you're satisfied.
+
+If you want to reinstall your sparc box and you're in the shell (as opposed to
+OBP), you could reboot, or send a `break` to the system, but there's a simpler
+way:
+
+--------------------------------------------------------------------------------
+root@netra / # reboot -- net - install
+--------------------------------------------------------------------------------
 
 
-Incorporating Blastwave into JumpStart
---------------------------------------
+When a command is missing
+~~~~~~~~~~~~~~~~~~~~~~~~~
+You may see that a command you had on the JumpStart server isn't there on your
+sparc box.
+
+--------------------------------------------------------------------------------
+root@netra / # less
+bash: less: command not found
+--------------------------------------------------------------------------------
+
+Go to the JumpStart server, find out where's your binary and which package does
+it belong to.
+
+--------------------------------------------------------------------------------
+root@vsol01 / # which less
+/usr/bin/less
+root@vsol01 / # pkgchk -l -p /usr/bin/less
+Pathname: /usr/bin/less
+Type: regular file
+Expected mode: 0555
+Expected owner: root
+Expected group: bin
+Expected file size (bytes): 101412
+Expected sum(1) of contents: 5918
+Expected last modification: Jan 23 02:23:38 2005
+Referenced by the following packages:
+        SUNWless       
+Current status: installed
+--------------------------------------------------------------------------------
+
+Here, we have found that the `less` command comes from `SUNWless` package. You
+can go to the JumpStart template and add `SUNWless` to the
+`base_config_profile_add_packages` list.
+
+
+Incorporating OpenCSW into JumpStart
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 When we're talking about making Solaris usable, we're not talking about the
-temporary one on your virtual machine, we're talking about the one you're
-installing on the sparc box.
+temporary, virtual one, we're talking about the one you're installing on the
+sparc box.
 
+One of the steps will be installing the _useful_ software, stuff that is
+available from CSW. Generally, we know how to install it, but what we really
+want here, is having it installed as part of JumpStart procedure.
+
+////////////////////////////////////////////////////////////////////////////////
+We'll do it in a lazy way. First, let's mirror the whole thing and put it on the
+virtual machine.
+
+--------------------------------------------------------------------------------
+rsync -v -rlptH --progress \
+  rsync://ftp.heanet.ie/pub/opencsw/unstable/sparc \
+  csw/unstable/sparc
+--------------------------------------------------------------------------------
+////////////////////////////////////////////////////////////////////////////////
+
+First we need to figure the list of packages that we want, with dependencies.
+
+The hard way: manual labor
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The simplet, although not the easiest way to go at this, will consist of first
+installing all the CSW packages we want on the our JumpStart server. Read what's
+there, and install all the packages that interest you.
+
+--------------------------------------------------------------------------------
+pkg-get -a | less
+pkg-get -i package_name
+--------------------------------------------------------------------------------
+
+`pkg-get` will figure out and install all the dependencies. After you're done,
+you can see the full list of CSW packages that have been installed.
+
+--------------------------------------------------------------------------------
+pkginfo | gawk '$2 ~ /^CSW/ { print $2 }'
+--------------------------------------------------------------------------------
+
+The next step would be to download all the listed packages from an OpenCSW
+mirror, and use `pkgtrans` to convert them to the directory format.
+
+
+The easy way: pkgutil
+~~~~~~~~~~~~~~~~~~~~~
+
+There's another utility, `pkgutil`. Issue `pkg-get -i pkgutil` to install it.
+`pkgutil` is able to create a _package stream_ with all the dependencies in it.
+In our case, we need to build a package streeam for sparc platform, even though
+we're working on an x86 right now.
+
+--------------------------------------------------------------------------------
+pkgutil -s --target=sparc:5.10 -o cswstuff.sparc.5.10.pkg \
+  bash_completion elinks fileutils findutils gawk ggrep gsed gtar gzip less \
+  mc ncftp netcat pstree readline rsync screen shutils sudo tree \
+  unarj unrar unzip vim w3m wget zsh pkgutil puppet
+--------------------------------------------------------------------------------
+
+// _My actual list is a bit longer and includes, among others, Puppet,
+// a configuration management tool._
+
+You may see a message like this: 
+
+--------------------------------------------------------------------------------
+MD5 for CSWosslrt doesn't match catalog!
+at /opt/csw/bin/pkgutil line 676, <STDIN> line 1.`
+--------------------------------------------------------------------------------
+
+It is usually triggered by incomplete file in `/var/opt/csw/pkgutil/packages`.
+Locate which file it was and delete it.
+
+--------------------------------------------------------------------------------
+rm /var/opt/csw/pkgutil/packages/openssl_rt-0.9.8\,REV\=2007.12.26_rev\=g-SunOS5.8-sparc-CSW.pkg.gz
+--------------------------------------------------------------------------------
+
+After pkgutil is finished, it will print a “dependency safe order” in which you
+can install those packages. You don't have to write it down, JumpStart will take
+care of the installation order. Let's find the package stream now. What is
+a package stream? It's a form of an archive (similar to tar), which can contain
+multiple packages. Packages can also come in “directory format”, which means
+that a package is a directory with files in it. JumpStart wants packages in
+directory format, we got a package stream. Conversion is needed.
+
+Look into `/var/opt/csw/pkgutil/packages` and find your file:
+`cswstuff.sparc.5.10.pkg`. The destination directory will be
+`/export/install/pkgs/custom/sparc`.
+
+--------------------------------------------------------------------------------
+mkdir -p /export/install/pkgs/custom/sparc
+pkgtrans /var/opt/csw/pkgutil/packages/cswstuff.sparc.5.10.pkg \
+  /export/install/pkgs/custom/sparc all
+ls -l /export/install/pkgs/custom/sparc
+--------------------------------------------------------------------------------
+
+Now, edit JumpStart template for your host and add all those CSW package names
+to a variable named `custom_packages`.
+
+--------------------------------------------------------------------------------
+custom_packages="
+CSWaspell
+CSWbashcmplt
+CSWbdb3
+CSWbzip2
+...
+CSWzlib
+CSWzsh
+"
+--------------------------------------------------------------------------------
+
+Make sure that the word `custom` is included in `base_config_products`.
+Otherwise your custom packages won't be installed at all.
+
+
+Adding custom files and scripts
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+JET allows to deploy a custom set of files. Read comments in the template for
+instructions. One trap I'va fallen into was that had all the settings in the
+custom section near the bottom of the template, but I didn't include the
+`custom` word in the `base_config_products` variable, which prevented the whole
+custom section from being processed.
+
+Some tasks that we would like to do after installation, can be automated.
+
+- Setting root home directory to `/root`
+  * .bash_profile and .bashrc
+- Setting a better prompt
+- Setting `MANPATH` to include CSW
+- Setting `TERMINFO` to include CSW
+- Setting default paths (`/etc/default/login`)
+- `/opt/csw/share/vim/vimrc` settings
+- Importing OpenCSW gpg key
+- Configuring pkgutil (pkg-get is preferred in OpenCSW?)
+- Enable remote root ssh (It's a test box, remember?)
+- Deploy authorized ssh public keys
+
+TODO: Write scripts.
+
+
+Random stuff
+------------
+
+Mac addresses
+~~~~~~~~~~~~~
+
+If your box has more network interfaces, you might find (type `ifconfig -a`)
+that all your interfaces have the same MAC address. You can change that by
+setting a `local-mac-address?` setting with `eeprom` command.
+
+--------------------------------------------------------------------------------
+sparcbox / $ eeprom local-mac-address?
+local-mac-address?=false
+sparcbox / $ eeprom local-mac-address?=true
+sparcbox / $ eeprom local-mac-address?
+local-mac-address?=true
+--------------------------------------------------------------------------------
 
 Contact
 -------
@@ -295,14 +794,16 @@ python -c "print 'bWFjaWVqLmJsaXppbnNraUBnbWFpbC5jb20=\n'.decode('base64')"
 --------------------------------------------------------------------------------
 
 
-
 References
 ----------
-* http://www.sun.com/software/solaris/[Solaris Operating System]
-* http://www.blastwave.org/[Blastwave]
+* http://www.sun.com/solaris/[Solaris Operating System]
+* http://www.opencsw.org/[OpenCSW]
 * http://www.virtualbox.org/[VirtualBox]
 * http://www.sun.com/bigadmin/content/jet/[JumpStart]
 * http://www.sun.com/software/security/jass/[SUNWjass]
 * http://www.sun.com/service/stb/index.jsp[Explorer]
+* http://devin.com/debian/debian-on-netra.html[Installing Debian on Netra T1]
+  (serial cable pinout table)
+* http://tinyurl.com/9t249[Creating Solaris packages]
 
 // vim:set ft=asciidoc:

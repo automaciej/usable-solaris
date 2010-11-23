@@ -1,0 +1,190 @@
+Solaris 10 preliminary setup
+----------------------------
+
+If you have just installed a Solaris 10 box and logged in via the
+console for the first time, you probably see something similar to this:
+
+--------------------------------------------------------------------------------
+Sun Microsystems Inc.   SunOS 5.10      Generic January 2005
+# █
+--------------------------------------------------------------------------------
+
+The purpose of this document is to provide a quick overview of how to
+set up your Solaris 10 system.
+
+The first thing I do after logging in via console, is starting bash.
+
+--------------------------------------------------------------------------------
+# bash -l
+bash-3.00# █
+--------------------------------------------------------------------------------
+
+Enable remote root ssh logins for convenience (make sure you have a strong root
+password!). _I don't recommend enabling this for production systems._
+
+--------------------------------------------------------------------------------
+cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
+sed < /etc/ssh/sshd_config.bak > /etc/ssh/sshd_config \
+	-e 's/PermitRootLogin no/PermitRootLogin yes/'
+svcadm restart ssh
+--------------------------------------------------------------------------------
+
+Now you can login via ssh and avoid working with the slow system console. It's
+also advisable to have more than one session open just in case something goes
+wrong.
+
+To find out your IP address:
+
+--------------------------------------------------------------------------------
+ifconfig -a
+--------------------------------------------------------------------------------
+
+Go ahead and log in via ssh. (You need to start bash again.)
+
+--------------------------------------------------------------------------------
+$ ssh root@<ip-address>
+(...)
+Sun Microsystems Inc.   SunOS 5.10      Generic January 2005
+# bash -l
+bash-3.00# █
+--------------------------------------------------------------------------------
+
+Let's set root's home directory and default shell. It's been argued that having
+`/` as root's home directory is fine because you can always use `/var/tmp` for
+working files. Yet somehow I don't like the idea of having root's `.bashrc` and
+`.ssh` kept in filesystem's root.
+
+--------------------------------------------------------------------------------
+mkdir /root
+chmod 0700 /root
+chown root:root /root
+cp /etc/passwd /etc/passwd.bak
+sed < /etc/passwd.bak > /etc/passwd.new \
+  -e 's+root:x:0:0:Super-User:/:/sbin/sh+root:x:0:0:Super-User:/root:/bin/bash+'
+--------------------------------------------------------------------------------
+
+You can examine `/etc/passwd.new` to see if it contains the right thing. If it
+looks good, copy it to `/etc/passwd`.
+
+--------------------------------------------------------------------------------
+[[ -s /etc/passwd.new ]] && cp /etc/passwd.new /etc/passwd || echo "It's empty."
+--------------------------------------------------------------------------------
+
+If you can now log off, as these changes require re-login to take
+effect.  It's a good moment to set up authentication using ssh keys.
+From the system where your keys live, execute a command along these
+lines:
+
+--------------------------------------------------------------------------------
+ssh-copy-id -i ~/.ssh/id_dsa.pub root@<ip-address>
+--------------------------------------------------------------------------------
+
+Let's set default paths.
+
+--------------------------------------------------------------------------------
+echo >> /etc/default/login \
+  "PATH=/opt/csw/gnu:/opt/csw/sbin:/opt/csw/bin:\
+/bin:/sbin:/usr/sbin:/usr/bin:\
+/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin:\
+/opt/SUNWspro/bin"
+
+echo >> /etc/default/login \
+"SUPATH=/opt/csw/gnu:/opt/csw/sbin:/opt/csw/bin:\
+/bin:/sbin:/usr/sbin:/usr/bin:\
+/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin:\
+/opt/SUNWspro/bin"
+--------------------------------------------------------------------------------
+
+NOTE: The file `/etc/default/login` doesn't really follow shell syntax, and it's
+not meant to be sourced.
+
+It's useful to set `MANPATH` as well.
+
+--------------------------------------------------------------------------------
+echo >> /etc/profile \
+  "MANPATH=/opt/csw/share/man:/opt/SUNWjet/man:/usr/sfw/share/man\
+/opt/SUNWexplo/man:/opt/SUNWspro/man:/usr/share/man"
+echo >> /etc/profile "export MANPATH"
+--------------------------------------------------------------------------------
+
+Bash has got sucky prompt by default, let's set it to something different.
+
+// bash-3.00# PS1="\u@\h \w # "
+--------------------------------------------------------------------------------
+PS1="\[\033[01;31m\]\h\[\033[01;34m\] \W \$\[\033[00m\] "
+echo "PS1=\"$PS1\"" >> ~/.bashrc
+echo '[[ -r ~/.bashrc ]] && source ~/.bashrc' >> ~/.bash_profile
+--------------------------------------------------------------------------------
+
+Now the prompt should look like this:
+
+--------------------------------------------------------------------------------
+root@vsol01 / # █
+--------------------------------------------------------------------------------
+
+That's better. You can now log off (but keep your console session open just in
+case) and log in again to see if your `PATH` is set properly.
+
+OpenCSW
+-------
+
+Now, the first thing you most probably want to do, is getting a set of
+GNU tools. I recommend using the OpenCSW package repository, as it tends
+to have the most up to date versions of packages.
+
+********************************************************************************
+TODO: OpenCSW website
+http://opencsw.org/bugtrack/view.php?id=2971[lacks instructions]
+on how to get started. Put something in here or encourage OpenCSW
+to write those instructions.
+********************************************************************************
+
+--------------------------------------------------------------------------------
+pkgadd -d http://mirror.opencsw.org/opencsw/pkgutil-`uname -p`.pkg all
+--------------------------------------------------------------------------------
+
+Continuing
+~~~~~~~~~~
+
+If you want to do any editing in vi and you're using GNU screen, you need to set
+your TERM variable into something that bare Solaris understands:
+
+--------------------------------------------------------------------------------
+export TERM=xterm
+--------------------------------------------------------------------------------
+
+Let's set up few more things:
+
+--------------------------------------------------------------------------------
+echo >> /etc/opt/csw/pkgutil.conf \
+  "mirror=ftp://ftp.heanet.ie/pub/opencsw/current"
+
+--------------------------------------------------------------------------------
+
+Since we were setting up PATHs, logout and log back in for your changes
+to take effect.
+
+After logging back in, update your OpenCSW catalog cache.
+
+--------------------------------------------------------------------------------
+pkgutil -U
+--------------------------------------------------------------------------------
+
+Now you can install all the software available from OpenCSW. Some of my first
+choices:
+
+--------------------------------------------------------------------------------
+pkgutil -y -i vim elinks findutils gawk ggrep gsed gtar wget rsync sudo \
+	screen mc gfile coreutils
+--------------------------------------------------------------------------------
+
+To initialize the findutils database:
+
+--------------------------------------------------------------------------------
+gupdatedb &
+--------------------------------------------------------------------------------
+
+Your preliminary setup is now complete.
+
+
+
