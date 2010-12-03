@@ -1,5 +1,7 @@
 Solaris 10 preliminary setup
-----------------------------
+============================
+Maciej Bliziński
+$Id$
 
 If you have just installed a Solaris 10 box and logged in via the
 console for the first time, you probably see something similar to this:
@@ -185,6 +187,3 @@ gupdatedb &
 --------------------------------------------------------------------------------
 
 Your preliminary setup is now complete.
-
-
-

@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.5.2" />
-<title></title>
+<title>Solaris 10 preliminary setup</title>
 <style type="text/css">
 /* Debug borders */
 p, li, dt, dd, div, pre, h1, h2, h3, h4, h5, h6 {
@@ -551,13 +551,16 @@ footnotes: function () {
 </head>
 <body>
 <div id="header">
+<h1>Solaris 10 preliminary setup</h1>
+<span id="author">Maciej Bliziński</span><br />
+<span id="revdate">$Id$</span>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
 </div>
 </div>
 <div id="content">
-<h2 id="_solaris_10_preliminary_setup">1. Solaris 10 preliminary setup</h2>
+<div id="preamble">
 <div class="sectionbody">
 <div class="paragraph"><p>If you have just installed a Solaris 10 box and logged in via the
 console for the first time, you probably see something similar to this:</p></div>
@@ -674,7 +677,8 @@ echo '[[ -r ~/.bashrc ]] &amp;&amp; source ~/.bashrc' &gt;&gt; ~/.bash_profile</
 <div class="paragraph"><p>That&#8217;s better. You can now log off (but keep your console session open just in
 case) and log in again to see if your <tt>PATH</tt> is set properly.</p></div>
 </div>
-<h2 id="_opencsw">2. OpenCSW</h2>
+</div>
+<h2 id="_opencsw">1. OpenCSW</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Now, the first thing you most probably want to do, is getting a set of
 GNU tools. I recommend using the OpenCSW package repository, as it tends
@@ -690,7 +694,7 @@ to write those instructions.</p></div>
 <div class="content">
 <pre><tt>pkgadd -d http://mirror.opencsw.org/opencsw/pkgutil-`uname -p`.pkg all</tt></pre>
 </div></div>
-<h3 id="_continuing">2.1. Continuing</h3><div style="clear:left"></div>
+<h3 id="_continuing">1.1. Continuing</h3><div style="clear:left"></div>
 <div class="paragraph"><p>If you want to do any editing in vi and you&#8217;re using GNU screen, you need to set
 your TERM variable into something that bare Solaris understands:</p></div>
 <div class="listingblock">
@@ -728,7 +732,7 @@ choices:</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2010-11-23 07:20:23 IST
+Last updated 2010-12-03 07:21:03 IST
 </div>
 </div>
 </body>
