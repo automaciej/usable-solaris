@@ -3,6 +3,9 @@ Solaris 10 preliminary setup
 Maciej Bliziński
 $Id$
 
+SSH access
+----------
+
 If you have just installed a Solaris 10 box and logged in via the
 console for the first time, you probably see something similar to this:
 
@@ -51,6 +54,9 @@ Sun Microsystems Inc.   SunOS 5.10      Generic January 2005
 bash-3.00# █
 --------------------------------------------------------------------------------
 
+Root's home directory and shell
+-------------------------------
+
 Let's set root's home directory and default shell. It's been argued that having
 `/` as root's home directory is fine because you can always use `/var/tmp` for
 working files. Yet somehow I don't like the idea of having root's `.bashrc` and
@@ -72,16 +78,22 @@ looks good, copy it to `/etc/passwd`.
 [[ -s /etc/passwd.new ]] && cp /etc/passwd.new /etc/passwd || echo "It's empty."
 --------------------------------------------------------------------------------
 
-If you can now log off, as these changes require re-login to take
-effect.  It's a good moment to set up authentication using ssh keys.
-From the system where your keys live, execute a command along these
-lines:
+If you can now log off, as these changes require re-login to take effect.
+
+SSH keys
+--------
+
+It's a good moment to set up authentication using ssh keys.  From the system
+where your keys live, execute a command along these lines:
 
 --------------------------------------------------------------------------------
 ssh-copy-id -i ~/.ssh/id_dsa.pub root@<ip-address>
 --------------------------------------------------------------------------------
 
-Let's set default paths.
+Default PATH
+------------
+
+Let's set default PATH.
 
 --------------------------------------------------------------------------------
 echo >> /etc/default/login \
@@ -109,12 +121,15 @@ echo >> /etc/profile \
 echo >> /etc/profile "export MANPATH"
 --------------------------------------------------------------------------------
 
+Default prompt
+--------------
+
 Bash has got sucky prompt by default, let's set it to something different.
 
 // bash-3.00# PS1="\u@\h \w # "
 --------------------------------------------------------------------------------
-PS1="\[\033[01;31m\]\h\[\033[01;34m\] \W \$\[\033[00m\] "
-echo "PS1=\"$PS1\"" >> ~/.bashrc
+PS1='\[\033[01;31m\]\h\[\033[01;34m\] \W \$\[\033[00m\] '
+echo "PS1='$PS1'" >> ~/.bashrc
 echo '[[ -r ~/.bashrc ]] && source ~/.bashrc' >> ~/.bash_profile
 --------------------------------------------------------------------------------
 
@@ -125,7 +140,21 @@ root@vsol01 / # █
 --------------------------------------------------------------------------------
 
 That's better. You can now log off (but keep your console session open just in
-case) and log in again to see if your `PATH` is set properly.
+case) and log in again to see if your `PATH` and prompt are set correctly.
+
+
+Default TERM
+------------
+
+If you want to do any editing in vi (not vim, but the stock Solaris vi) and
+you're using GNU screen, you need to set your TERM variable into something that
+bare Solaris understands:
+
+--------------------------------------------------------------------------------
+echo 'export TERM=xterm' >> ~/.bashrc
+export TERM=xterm
+--------------------------------------------------------------------------------
+
 
 OpenCSW
 -------
@@ -145,17 +174,7 @@ to write those instructions.
 pkgadd -d http://mirror.opencsw.org/opencsw/pkgutil-`uname -p`.pkg all
 --------------------------------------------------------------------------------
 
-Continuing
-~~~~~~~~~~
-
-If you want to do any editing in vi and you're using GNU screen, you need to set
-your TERM variable into something that bare Solaris understands:
-
---------------------------------------------------------------------------------
-export TERM=xterm
---------------------------------------------------------------------------------
-
-Let's set up few more things:
+Set up the default mirror (optional).
 
 --------------------------------------------------------------------------------
 echo >> /etc/opt/csw/pkgutil.conf \
@@ -163,17 +182,14 @@ echo >> /etc/opt/csw/pkgutil.conf \
 
 --------------------------------------------------------------------------------
 
-Since we were setting up PATHs, logout and log back in for your changes
-to take effect.
-
-After logging back in, update your OpenCSW catalog cache.
+Update your OpenCSW catalog cache.
 
 --------------------------------------------------------------------------------
 pkgutil -U
 --------------------------------------------------------------------------------
 
-Now you can install all the software available from OpenCSW. Some of my first
-choices:
+You can now install all the software available from OpenCSW.
+Some of my first choices:
 
 --------------------------------------------------------------------------------
 pkgutil -y -i vim elinks findutils gawk ggrep gsed gtar wget rsync sudo \
@@ -186,4 +202,75 @@ To initialize the findutils database:
 gupdatedb &
 --------------------------------------------------------------------------------
 
-Your preliminary setup is now complete.
+Regular user setup
+------------------
+
+You probably don't want to perform all the operations as root.  You can set up
+a regular user account for yourself.  If you're accustomed to having your home
+directory in /home, an attempt to a user with it will and up with an unhelpful
+error message: "UX: useradd: ERROR: Unable to create the home directory:
+Operation not applicable."  The problem is that in a default installation, the
+/home directory is controlled by autofs.  In order to create directories there,
+you need to either disable, or reconfigure autofs.  In this document, we'll go
+for the disable option.  Set your user name in the first line.
+
+--------------------------------------------------------------------------------
+REGULAR_USER=maciej
+svcadm disable autofs
+useradd -s /bin/bash -m -d /home/${REGULAR_USER} ${REGULAR_USER}
+passwd ${REGULAR_USER}
+--------------------------------------------------------------------------------
+
+For convenience, we'll also copy the ssh public key to allow easy ssh access.
+While we're at it, we'll also set the prompt.
+
+--------------------------------------------------------------------------------
+mkdir /home/${REGULAR_USER}/.ssh
+chmod 700 /home/${REGULAR_USER}/.ssh
+cp /root/.ssh/authorized_keys /home/${REGULAR_USER}/.ssh/authorized_keys
+UPS1='\[\033[00;33m\]\u@\h\[\033[01;34m\] \w \$\[\033[00m\] '
+echo "PS1='$UPS1'" >> /home/${REGULAR_USER}/.bashrc
+echo '[[ -r ~/.bashrc ]] && source ~/.bashrc' \
+  >> /home/${REGULAR_USER}/.bash_profile
+chown -R ${REGULAR_USER} /home/${REGULAR_USER}
+--------------------------------------------------------------------------------
+
+You will probably want sudo access from your regular user account.  sudo is not
+available in the standard Solaris installation, because real men use pfexec.
+However, you can install sudo from OpenCSW (see above).  By default, sudo won't
+allow your user to gain root permissions.
+
+--------------------------------------------------------------------------------
+echo "${REGULAR_USER} ALL =(ALL) ALL" >> /opt/csw/etc/sudoers
+--------------------------------------------------------------------------------
+
+Note that generally, 'visudo' is the preferred way to edit the sudoers file.
+It's just not convenient for scripting.
+
+Log in as a regular user, check your PS1, PATH and MANPATH, and your
+sudo access.
+
+--------------------------------------------------------------------------------
+maciej@vsol01 ~ $ sudo echo foo
+
+We trust you have received the usual lecture from the local System
+Administrator. It usually boils down to these three things:
+
+    #1) Respect the privacy of others.
+    #2) Think before you type.
+    #3) With great power comes great responsibility.
+
+Password: 
+foo
+maciej@vsol01 ~ $ █
+--------------------------------------------------------------------------------
+
+Congratulations!
+----------------
+
+Your preliminary setup is now complete.  If you have any questions, comments or
+suggestions, here's my contact information:
+
+--------------------------------------------------------------------------------
+python -c "print 'bWFjaWVqLmJsaXppbnNraUBnbWFpbC5jb20='.decode('base64')"
+--------------------------------------------------------------------------------
