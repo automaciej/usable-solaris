@@ -151,9 +151,11 @@ you're using GNU screen, you need to set your TERM variable into something that
 bare Solaris understands:
 
 --------------------------------------------------------------------------------
-echo 'export TERM=xterm' >> ~/.bashrc
 export TERM=xterm
 --------------------------------------------------------------------------------
+
+Don't make that permanent in ~/.bashrc, because we'll have a better
+terminfo later on.
 
 
 OpenCSW
@@ -201,6 +203,21 @@ To initialize the findutils database:
 --------------------------------------------------------------------------------
 gupdatedb &
 --------------------------------------------------------------------------------
+
+
+Terminfo
+--------
+
+If you like to use colors in your terminal, and would like programs
+(e.g. vim) to know that your terminal understands colors, you need
+a better terminfo.
+
+--------------------------------------------------------------------------------
+pkgutil -y -i terminfo
+echo "TERMINFO=/opt/csw/share/terminfo" >> /etc/profile
+echo "export TERMINFO" >> /etc/profile
+--------------------------------------------------------------------------------
+
 
 Regular user setup
 ------------------

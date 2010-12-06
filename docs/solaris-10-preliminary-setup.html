@@ -553,8 +553,8 @@ footnotes: function () {
 <div id="header">
 <h1>Solaris 10 preliminary setup</h1>
 <span id="author">Maciej Bliziński</span><br />
-<span id="revnumber">version 81,</span>
-<span id="revdate">2010-12-03</span>
+<span id="revnumber">version 83,</span>
+<span id="revdate">2010-12-05</span>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
@@ -696,9 +696,10 @@ you&#8217;re using GNU screen, you need to set your TERM variable into something
 bare Solaris understands:</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>echo 'export TERM=xterm' &gt;&gt; ~/.bashrc
-export TERM=xterm</tt></pre>
+<pre><tt>export TERM=xterm</tt></pre>
 </div></div>
+<div class="paragraph"><p>Don&#8217;t make that permanent in ~/.bashrc, because we&#8217;ll have a better
+terminfo later on.</p></div>
 </div>
 <h2 id="_opencsw">7. OpenCSW</h2>
 <div class="sectionbody">
@@ -740,7 +741,19 @@ Some of my first choices:</p></div>
 <pre><tt>gupdatedb &amp;</tt></pre>
 </div></div>
 </div>
-<h2 id="_regular_user_setup">8. Regular user setup</h2>
+<h2 id="_terminfo">8. Terminfo</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>If you like to use colors in your terminal, and would like programs
+(e.g. vim) to know that your terminal understands colors, you need
+a better terminfo.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>pkgutil -y -i terminfo
+echo "TERMINFO=/opt/csw/share/terminfo" &gt;&gt; /etc/profile
+echo "export TERMINFO" &gt;&gt; /etc/profile</tt></pre>
+</div></div>
+</div>
+<h2 id="_regular_user_setup">9. Regular user setup</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>You probably don&#8217;t want to perform all the operations as root.  You can set up
 a regular user account for yourself.  If you&#8217;re accustomed to having your home
@@ -798,7 +811,7 @@ foo
 maciej@vsol01 ~ $ █</tt></pre>
 </div></div>
 </div>
-<h2 id="_congratulations">9. Congratulations!</h2>
+<h2 id="_congratulations">10. Congratulations!</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Your preliminary setup is now complete.  If you have any questions, comments or
 suggestions, here&#8217;s my contact information:</p></div>
@@ -811,8 +824,8 @@ suggestions, here&#8217;s my contact information:</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Version 81<br />
-Last updated 2010-12-05 18:16:18 IST
+Version 83<br />
+Last updated 2010-12-06 08:54:13 IST
 </div>
 </div>
 </body>
