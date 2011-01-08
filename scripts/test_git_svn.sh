@@ -80,7 +80,6 @@ popd
 pushd "${GIT_REPO_1}"
 git remote add "repo-2" "file://${GIT_REPO_2}"
 git pull "repo-2" master
-git_edit_line 6 foo.txt repo1
 git svn fetch
 git svn rebase || true
 # We have a conflict in foo.txt right now.
