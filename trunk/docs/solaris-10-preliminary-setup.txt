@@ -173,7 +173,7 @@ to write those instructions.
 ********************************************************************************
 
 --------------------------------------------------------------------------------
-pkgadd -d http://mirror.opencsw.org/opencsw/pkgutil-`uname -p`.pkg all
+pkgadd -d http://mirror.opencsw.org/opencsw/pkgutil.pkg all
 --------------------------------------------------------------------------------
 
 Set up the default mirror (optional).
