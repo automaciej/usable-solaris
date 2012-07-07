@@ -212,14 +212,18 @@ echo "export TERMINFO" >> /etc/profile
 
 Pager
 -----
-The default Solaris pager, `more`, only allows to scroll down, and not up.
-Let's set `less` as the default pager.
+
+Solaris 'man' by default uses the 'more' utility to display output page
+by page.  The annoying limitation of 'more' is that it doesn't allow you
+to scroll backwards.  To get around this, set the PAGER environment
+variable.
 
 --------------------------------------------------------------------------------
 pkgutil -y -i less
 echo "PAGER=/opt/csw/bin/less" >> /etc/profile
 echo "export PAGER" >> /etc/profile
 --------------------------------------------------------------------------------
+
 
 Regular user setup
 ------------------

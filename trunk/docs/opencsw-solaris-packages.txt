@@ -1,0 +1,74 @@
+Solaris packages with GAR
+=========================
+Maciej Bliziński
+$Id$
+
+Prerequisites
+-------------
+
+ * A Solaris 10 installation
+ * link:solaris-10-preliminary-setup.html[Preliminary setup]
+
+
+Setting up the environment
+--------------------------
+
+You need a compiler.  At OpenCSW, Oracle Studio is the default compiler,
+but it's slightly annoying to install, for the purposes of this howto,
+we'll stick to GCC.
+
+.Installing GCC 4
+--------------------------------------------------------------------------------
+pkgutil -y -i gcc4g++
+--------------------------------------------------------------------------------
+
+.Installing GAR
+--------------------------------------------------------------------------------
+pkgutil -t http://buildfarm.opencsw.org/opencsw/experimental/gar -y -i gar
+--------------------------------------------------------------------------------
+
+.Configuring GAR
+--------------------------------------------------------------------------------
+echo "SPKG_PACKAGER = Maciej Blizinski" >> ~/.garrc
+echo "SPKG_EMAIL = maciej@example.com" >> ~/.garrc
+--------------------------------------------------------------------------------
+
+Since building on Solaris often requires patching the source code, gar
+automatically initializes a git repositoriy after unpacking the source
+code.  It makes it much easier to create patches.  In order to use git,
+we need to configure it.
+
+.Configuring git
+--------------------------------------------------------------------------------
+echo "export EDITOR=/opt/csw/bin/vim" >> ~/.bashrc
+git config --global user.email "you@example.com"
+git config --global user.name "Your Name"
+--------------------------------------------------------------------------------
+
+Checking out the GAR source tree
+--------------------------------
+
+We're going to use mgar, a command-line utility.  The first command
+initializes the package tree, and the second command check out all the
+source code to disk.  It's a lengthy process, so you can start it and
+catch a break.
+
+--------------------------------------------------------------------------------
+mgar init
+mgar up-pkgtree
+--------------------------------------------------------------------------------
+
+Creating a new build description
+--------------------------------
+
+Patching
+--------
+
+Creating the gzipped srv4 file
+------------------------------
+
+A srv4 file is what is commonly referred to as 'a package'.
+
+
+Further reading
+---------------

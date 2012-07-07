@@ -94,7 +94,7 @@ If we're going the virtual machine route, the diagram will look more like this:
 |                [br0]----+  |                         |                       |
 |                         |  |                         |                       |
 |                     [eth0] |                         | [hme0]                |
-|	                 [RJ45] --(192.168.1.0/24)-- [RJ45]                    |
+|	                       [RJ45] --(192.168.1.0/24)-- [RJ45]                    |
 |                            |                         |                       |
 |             [/dev/ttyUSB0] |                         | [/dev/ttya]           |
 |                         [USB] ---(serial cable)--- [serial port]             |
@@ -117,6 +117,11 @@ installed on kvm, but it didn't really want to run.  My best experiences were
 with VirtualBox, which is now a Sun product, so it's important for them, for
 political reasons I guess, that it runs Solaris smoothly. Browse the source
 code and look into the `scripts/vbox` directory.
+
+NOTE: This section discusses a headless installation of VirtualBox,
+something that you would have on a remote machine or a machine without
+a monitor.  If you intend to run VirtualBox on your workstation, use the
+GUI to create your virtual machines.
 
 VirtualBox website has instructions on how to install VirtualBox; they provide
 Ubuntu package repository, which you can add to your `/etc/apt/sources.list`.
@@ -145,29 +150,40 @@ auto eth0
 auto br0
 --------------------------------------------------------------------------------
 
-Create virtual hard disk for the virtual machine.
+Creating a virtual machine
+--------------------------
+
+Create a virtual hard disk.
 
 --------------------------------------------------------------------------------
-VBoxManage createvdi -filename /path/to/file.vdi -size 16384
+VBoxManage createvdi --filename /path/to/file.vdi -size 16384
 --------------------------------------------------------------------------------
 
-Create the virtual machine and make settings.
+Create the virtual machine and settings.
 
 --------------------------------------------------------------------------------
-VBoxManage createvm -name yourvmname -register
+VBoxManage createvm --name yourvmname --register
 VBoxManage modifyvm yourvmname \
-	-ostype Solaris \
-	-memory 512m \
-	-acpi off \
-	-hda /path/to/file.vdi \
-	-nic1 hostif \
-	-hostifdev1 vbox0 \
-	-nictype1 82540EM \
-	-cableconnected1 on \
-	-nicspeed1 10000 \
-	-vrdp on \
-	-vrdpport 3990 \
-	-boot1 dvd
+  --ostype Solaris_64 \
+  --memory 512 \
+  --acpi off \
+  --nic1 bridged \
+  --nictype1 82540EM \
+  --cableconnected1 on \
+  --nicspeed1 10000 \
+  --boot1 dvd \
+  --boot2 disk
+VBoxManage storagectl vsol06 \
+  --name "SCSI Controller" \
+  --add scsi \
+  --controller PIIX4
+VBoxManage storageattach vsol06 \
+  --storagectl "SCSI Controller" \
+  --port 0 \
+  --device 0 \
+  --type hdd \
+  --medium /path/to/file.vdi
+
 --------------------------------------------------------------------------------
 
 NOTE: Give your virtual machine 16GB of disk at minimum. You will want to cram
