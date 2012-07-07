@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.6" />
-<title>Turning up a sparc box</title>
+<title>Installing a SPARC server</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -735,10 +735,10 @@ asciidoc.install(2);
 </head>
 <body class="article">
 <div id="header">
-<h1>Turning up a sparc box</h1>
+<h1>Installing a SPARC server</h1>
 <span id="author">Maciej Bliziński</span><br />
-<span id="revnumber">version 79,</span>
-<span id="revdate">2010-11-23</span>
+<span id="revnumber">version 90,</span>
+<span id="revdate">2012-07-07</span>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
@@ -747,14 +747,19 @@ asciidoc.install(2);
 <div id="content">
 <div id="preamble">
 <div class="sectionbody">
-<div class="paragraph"><p>So, you&#8217;ve got this sparc machine you&#8217;re planning to play with, right?</p></div>
-<div class="paragraph"><p>Has it got any CD-ROM? No? Uh oh, you&#8217;ll need to do some fiddling to get the OS
-there.  Your best bet is the network.  I assume you already have an x86 box, and
-your network layout looks similar to this one:</p></div>
+<div class="paragraph"><p>What to do if you have a SPARC box (e.g. a netra) and a Solaris CD or DVD, but
+the machine has no CD ROM drive. The OS can be installed over network using
+Jumpstart, but Jumpstart is rather hard to set up on GNU/Linux, so it&#8217;s easier
+to first make an installation of Solaris on a virtual machine, and use it to
+install Solaris in the SPARC server.</p></div>
+<div class="paragraph"><p>You probably already have an x86 box, and your network layout looks
+similar to this one:</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>+----------+                        +------------+
+|          |                        |            |
 | x86 box ------(192.168.1.0/24)------ sparc-box |
+|          |                        |            |
 +----------+                        +------------+</tt></pre>
 </div></div>
 </div>
@@ -815,8 +820,8 @@ installing Solaris and using JET has a much more flat learning curve.</p></div>
 <div class="title">Note</div>
 </td>
 <td class="content">Sun like to distort the common symbol for Intel architecture, <tt>x86</tt>.  You
-may see capitalized <tt>X86</tt> or <tt>i86pc</tt> (huh?). I have no idea why is that. I&#8217;ll
-keep calling it the usual way: <tt>x86</tt>.</td>
+may see capitalized <tt>X86</tt> or <tt>i86pc</tt>. I have no idea why is that. I&#8217;ll keep
+calling it the usual way: <tt>x86</tt>.</td>
 </tr></table>
 </div>
 <div class="paragraph"><p>If we&#8217;re going the virtual machine route, the diagram will look more like this:</p></div>
@@ -838,7 +843,7 @@ keep calling it the usual way: <tt>x86</tt>.</td>
 |                [br0]----+  |                         |                       |
 |                         |  |                         |                       |
 |                     [eth0] |                         | [hme0]                |
-|                              [RJ45] --(192.168.1.0/24)-- [RJ45]                    |
+|                        [RJ45] --(192.168.1.0/24)-- [RJ45]                    |
 |                            |                         |                       |
 |             [/dev/ttyUSB0] |                         | [/dev/ttya]           |
 |                         [USB] ---(serial cable)--- [serial port]             |
@@ -864,9 +869,8 @@ work.</td>
 <div class="sectionbody">
 <div class="paragraph"><p>I tried running Solaris with few different hypervisors. I got it sort of
 installed on kvm, but it didn&#8217;t really want to run.  My best experiences were
-with VirtualBox, which is now a Sun product, so it&#8217;s important for them, for
-political reasons I guess, that it runs Solaris smoothly. Browse the source
-code and look into the <tt>scripts/vbox</tt> directory.</p></div>
+with VirtualBox, which is now an Oracle product.  I wrote <a href="vbox_setup.sh">a
+script</a> which automates the creation of a virtual machine on a headless system.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -886,57 +890,7 @@ you&#8217;ll need an additional package with kernel headers:</p></div>
 <div class="content">
 <pre><tt>sudo aptitude install linux-headers-$(uname -r)</tt></pre>
 </div></div>
-<div class="paragraph"><p>You need to use bridged networking with your virtual machine. On Ubuntu, the
-network configuration should look like this:</p></div>
-<div class="listingblock">
-<div class="title"><tt>/etc/network/interfaces</tt></div>
-<div class="content">
-<pre><tt># The loopback network interface
-auto lo
-iface lo inet loopback
-
-# The primary network interface
-iface br0 inet dhcp
-bridge_ports eth0
-
-auto eth0
-auto br0</tt></pre>
-</div></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_creating_a_virtual_machine">4. Creating a virtual machine</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>Create a virtual hard disk.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>VBoxManage createvdi --filename /path/to/file.vdi -size 16384</tt></pre>
-</div></div>
-<div class="paragraph"><p>Create the virtual machine and settings.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>VBoxManage createvm --name yourvmname --register
-VBoxManage modifyvm yourvmname \
-  --ostype Solaris_64 \
-  --memory 512 \
-  --acpi off \
-  --nic1 bridged \
-  --nictype1 82540EM \
-  --cableconnected1 on \
-  --nicspeed1 10000 \
-  --boot1 dvd \
-  --boot2 disk
-VBoxManage storagectl vsol06 \
-  --name "SCSI Controller" \
-  --add scsi \
-  --controller PIIX4
-VBoxManage storageattach vsol06 \
-  --storagectl "SCSI Controller" \
-  --port 0 \
-  --device 0 \
-  --type hdd \
-  --medium /path/to/file.vdi</tt></pre>
-</div></div>
+<div class="paragraph"><p>You need to use bridged networking with your virtual machine.</p></div>
 <div class="admonitionblock">
 <table><tr>
 <td class="icon">
@@ -948,38 +902,13 @@ create an additional disk and attach it afterwards, but it&#8217;s better to sav
 hassle.</td>
 </tr></table>
 </div>
-<div class="paragraph"><p>Take a look at the <tt>vrdp</tt> setting. It tells VirtualBox to expose virtual
-machine&#8217;s console via rdesktop protocol. If you&#8217;re running VirtualBox locally,
-you can connect to a running virtual machine with:</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>rdesktop localhost:3990</tt></pre>
-</div></div>
-<div class="paragraph"><p>If you&#8217;re running VirtualBox on a remote machine, you can create an ssh tunnel
-and use it:</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>ssh -f -N -C -L 3990:localhost:3990 remotemachine
-rdesktop localhost:3990</tt></pre>
-</div></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_installing_solaris">5. Installing Solaris</h2>
+<h2 id="_installing_solaris">4. Installing Solaris</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Get the DVD ISO image from Sun&#8217;s website. You need to register, but the download
-is free.</p></div>
-<div class="paragraph"><p><em>Insert</em> your ISO image into the virtual machine.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>VBoxManage modifyvm yourvmname -dvd /path/to/solaris.iso</tt></pre>
-</div></div>
-<div class="paragraph"><p>Start the virtual machine.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>VBoxManage startvm yourvmname</tt></pre>
-</div></div>
-<div class="paragraph"><p>And run rdesktop.</p></div>
+<div class="paragraph"><p>Get the DVD ISO image from the Oracle website. You need to register, but the
+download is free.</p></div>
 <div class="paragraph"><p>I won&#8217;t go into much detail of how to install Solaris on a virtual machine. Just
 a couple of hints.</p></div>
 <div class="ulist"><ul>
@@ -1002,8 +931,8 @@ After Solaris is installed, you get a shiny blue Sun-branded graphical login.
 </p>
 </li>
 </ul></div>
-<div class="paragraph"><p>At this point, I&#8217;ll happily assume you can log in as root, and you see something
-like this:</p></div>
+<div class="paragraph"><p>At this point, I&#8217;ll assume you can log in as root, and you see something like
+this:</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>Sun Microsystems Inc.   SunOS 5.10      Generic January 2005
@@ -1037,29 +966,30 @@ Usage: grep -hblcnsviw pattern file . . .
 ^[[A: not found
 # █</tt></pre>
 </div></div>
-<div class="paragraph"><p>There&#8217;s some work you need to do before you can <em>actually</em> work, as opposed to
-just staring at a blinking cursor and thinking how awesome it is to have a real
-Unix running in front of you. (What does it mean anyway, a <em>real</em> Unix? I never
-figured that out.)</p></div>
+<div class="paragraph"><p>There&#8217;s some work you need to do before you can <em>actually</em> use the system, as
+opposed to just staring at a blinking cursor and thinking how awesome it is to
+have installed Solaris.</p></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_preliminary_setup">6. Preliminary setup</h2>
+<h2 id="_preliminary_setup">5. Preliminary setup</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>We won&#8217;t be spending <em>too</em> much time on this, because it&#8217;s only an intermediate
+<div class="paragraph"><p>We won&#8217;t be spending too much time on this, because it&#8217;s only an intermediate
 system, but let&#8217;s get a little more comfortable here.</p></div>
 <div class="paragraph"><p>Please refer to <a href="solaris-10-preliminary-setup.html">Solaris 10
 preliminary setup</a>.</p></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_jet_jumpstart_enterprise_toolkit">7. JET, JumpStart Enterprise Toolkit</h2>
+<h2 id="_jet_jumpstart_enterprise_toolkit">6. JET, JumpStart Enterprise Toolkit</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_installation">7.1. Installation</h3>
-<div class="paragraph"><p>Go to the JumpStart website, download the <tt>jet.pkg.bz2</tt> package and follow
-instructions. It&#8217;s basically about installing the jet package, then copying
-Solaris media and configuring your client.</p></div>
+<h3 id="_installation">6.1. Installation</h3>
+<div class="paragraph"><p>Go to the
+<a href="http://www.oracle.com/technetwork/systems/jet-toolkit/jet-toolkit-1614844.html">JumpStart
+website</a>, download <tt>jet.pkg.bz2</tt> and follow instructions. It&#8217;s basically about
+installing the JET package, then copying Solaris media and configuring your
+client.</p></div>
 <div class="paragraph"><p>Some stuff that isn&#8217;t covered in JumpStart instructions:</p></div>
 <div class="listingblock">
 <div class="content">
@@ -1097,18 +1027,17 @@ have it on a local disk.</td>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_what_is_a_template">7.2. What is a template</h3>
+<h3 id="_what_is_a_template">6.2. What is a template</h3>
 <div class="paragraph"><p>A <em>template</em> in JET is not so much a template, at least from your perspective.
 It is a template in a sense, that it&#8217;s used to generate configuration for
 jumpstart, the underlying technology, which is really a collection of RARP, TFTP
-and NFS stuff.</p></div>
+and NFS configuration files.</p></div>
 <div class="paragraph"><p>It&#8217;s best if you have your hostname configured in DNS and RevDNS. If your host
 is, say <tt>sparcbox</tt>, and <tt>sparcbox</tt> resolves in your DNS, JET will pick up the IP
 address and put it into the template.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_making_one">7.3. Making one</h3>
-<div class="paragraph"><p>Now, let&#8217;s make it.</p></div>
+<h3 id="_making_a_template">6.3. Making a template</h3>
 <div class="listingblock">
 <div class="content">
 <pre><tt>cd /opt/SUNWjet/Templates
@@ -1116,7 +1045,7 @@ make_template sparcbox base_config sds sbd custom zfs</tt></pre>
 </div></div>
 </div>
 <div class="sect2">
-<h3 id="_editing_the_template">7.4. Editing the template</h3>
+<h3 id="_editing_the_template">6.4. Editing the template</h3>
 <div class="paragraph"><p>Now, you can edit the file named <tt>sparcbox</tt> (or whatever is the name of your
 machine).</p></div>
 <div class="listingblock">
@@ -1128,7 +1057,7 @@ a good idea what to put where. I&#8217;ll only point out more important bits and
 gotchas.</p></div>
 <div class="paragraph"><p>Bits you need to edit:</p></div>
 <div class="sect3">
-<h4 id="_architecture_type">7.4.1. Architecture type</h4>
+<h4 id="_architecture_type">6.4.1. Architecture type</h4>
 <div class="paragraph"><p>Which architecture you need, can be looked up in comments. Mine was <tt>sun4u</tt>.</p></div>
 <div class="listingblock">
 <div class="content">
@@ -1139,7 +1068,7 @@ base_config_ClientOS=10_U6_SPARC</tt></pre>
 <div class="paragraph"><p>The <tt>10_U6_SPARC</tt> bit should match what was used in <tt>copy_solaris_media</tt>.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_jumpstart_sysidcfg_information">7.4.2. JumpStart sysidcfg information</h4>
+<h4 id="_jumpstart_sysidcfg_information">6.4.2. JumpStart sysidcfg information</h4>
 <div class="paragraph"><p>When specifying <tt>base_config_sysidcfg_nameservice</tt>, you need to enclose the
 whole thing in quotes.</p></div>
 <div class="listingblock">
@@ -1148,7 +1077,7 @@ whole thing in quotes.</p></div>
 </div></div>
 </div>
 <div class="sect3">
-<h4 id="_disk_labeling">7.4.3. Disk labeling</h4>
+<h4 id="_disk_labeling">6.4.3. Disk labeling</h4>
 <div class="listingblock">
 <div class="content">
 <pre><tt>base_config_label_disks="all"
@@ -1156,7 +1085,7 @@ base_config_profile_fdisk="alldisk"</tt></pre>
 </div></div>
 </div>
 <div class="sect3">
-<h4 id="_jumpstart_profile_information">7.4.4. JumpStart profile information</h4>
+<h4 id="_jumpstart_profile_information">6.4.4. JumpStart profile information</h4>
 <div class="paragraph"><p><tt>SUNWCuser</tt> is selected by default. We won&#8217;t need all that on the sparc box, and
 we&#8217;ll learn how to pick and choose packages we want. <tt>SUNWCreq</tt> gives a much
 lighter OS base. (In a sense that it installs less packages.)</p></div>
@@ -1166,7 +1095,7 @@ lighter OS base. (In a sense that it installs less packages.)</p></div>
 </div></div>
 </div>
 <div class="sect3">
-<h4 id="_disk_slices">7.4.5. Disk slices</h4>
+<h4 id="_disk_slices">6.4.5. Disk slices</h4>
 <div class="paragraph"><p>We&#8217;ll create two slices of equal size. I picked 4096MB, but you might want
 something smaller or bigger, depending on the size of your hard drive. The idea
 is that there are <em>root</em> and <em>alt root</em> partitions, both of equal size. They
@@ -1219,7 +1148,7 @@ single user mode and thus reducing system downtime.</p></div>
 </div></div>
 </div>
 <div class="sect3">
-<h4 id="_additional_packages_and_clusters">7.4.6. Additional packages and clusters</h4>
+<h4 id="_additional_packages_and_clusters">6.4.6. Additional packages and clusters</h4>
 <div class="listingblock">
 <div class="content">
 <pre><tt>base_config_profile_add_packages="SUNWman SUNWless SUNWdoc SUNWtoo SUNWrcmdc"
@@ -1232,7 +1161,7 @@ SUNWCwget SUNWCzfs SUNWCzone SUNWCpool"</tt></pre>
 <div class="paragraph"><p>Strings spanning multiple lines will work fine.</p></div>
 </div>
 <div class="sect3">
-<h4 id="_sds_8201_8212_8201_disk_mirror">7.4.7. SDS&#8201;&#8212;&#8201;disk mirror</h4>
+<h4 id="_sds_8201_8212_8201_disk_mirror">6.4.7. SDS&#8201;&#8212;&#8201;disk mirror</h4>
 <div class="paragraph"><p>JumpStart can allow to create a mirrored root in a very easy way. All you need
 is two disks of the same size and knowing which one is going to be the mirror.</p></div>
 <div class="listingblock">
@@ -1253,7 +1182,7 @@ enter the name of the mirror disk.</p></div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_make_client">7.5. make_client</h3>
+<h3 id="_make_client">6.5. make_client</h3>
 <div class="paragraph"><p>When your template is ready, you can <tt>make_client</tt>, which means that JET scripts
 will pick up stuff that you enclosed in the template and configure JumpStart.</p></div>
 <div class="listingblock">
@@ -1265,7 +1194,7 @@ will pick up stuff that you enclosed in the template and configure JumpStart.</p
 with the word <em>FAILED</em>. Apart from the banner, it prints useful error messages.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_launching_the_installation">7.6. Launching the installation</h3>
+<h3 id="_launching_the_installation">6.6. Launching the installation</h3>
 <div class="paragraph"><p>You need to get to the Open Boot Prom, or OBP. You can tell that you&#8217;re there
 when you&#8217;re seeing an <tt>ok</tt> prompt, like this:</p></div>
 <div class="listingblock">
@@ -1343,7 +1272,7 @@ way:</p></div>
 </div></div>
 </div>
 <div class="sect2">
-<h3 id="_when_a_command_is_missing">7.7. When a command is missing</h3>
+<h3 id="_when_a_command_is_missing">6.7. When a command is missing</h3>
 <div class="paragraph"><p>You may see that a command you had on the JumpStart server isn&#8217;t there on your
 sparc box.</p></div>
 <div class="listingblock">
@@ -1375,7 +1304,7 @@ can go to the JumpStart template and add <tt>SUNWless</tt> to the
 <tt>base_config_profile_add_packages</tt> list.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_incorporating_opencsw_into_jumpstart">7.8. Incorporating OpenCSW into JumpStart</h3>
+<h3 id="_incorporating_opencsw_into_jumpstart">6.8. Incorporating OpenCSW into JumpStart</h3>
 <div class="paragraph"><p>When we&#8217;re talking about making Solaris usable, we&#8217;re not talking about the
 temporary, virtual one, we&#8217;re talking about the one you&#8217;re installing on the
 sparc box.</p></div>
@@ -1385,7 +1314,7 @@ want here, is having it installed as part of JumpStart procedure.</p></div>
 <div class="paragraph"><p>First we need to figure the list of packages that we want, with dependencies.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_the_hard_way_manual_labor">7.9. The hard way: manual labor</h3>
+<h3 id="_the_hard_way_manual_labor">6.9. The hard way: manual labor</h3>
 <div class="paragraph"><p>The simplet, although not the easiest way to go at this, will consist of first
 installing all the CSW packages we want on the our JumpStart server. Read what&#8217;s
 there, and install all the packages that interest you.</p></div>
@@ -1404,7 +1333,7 @@ you can see the full list of CSW packages that have been installed.</p></div>
 mirror, and use <tt>pkgtrans</tt> to convert them to the directory format.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_the_easy_way_pkgutil">7.10. The easy way: pkgutil</h3>
+<h3 id="_the_easy_way_pkgutil">6.10. The easy way: pkgutil</h3>
 <div class="paragraph"><p>There&#8217;s another utility, <tt>pkgutil</tt>. Issue <tt>pkg-get -i pkgutil</tt> to install it.
 <tt>pkgutil</tt> is able to create a <em>package stream</em> with all the dependencies in it.
 In our case, we need to build a package streeam for sparc platform, even though
@@ -1463,7 +1392,7 @@ CSWzsh
 Otherwise your custom packages won&#8217;t be installed at all.</p></div>
 </div>
 <div class="sect2">
-<h3 id="_adding_custom_files_and_scripts">7.11. Adding custom files and scripts</h3>
+<h3 id="_adding_custom_files_and_scripts">6.11. Adding custom files and scripts</h3>
 <div class="paragraph"><p>JET allows to deploy a custom set of files. Read comments in the template for
 instructions. One trap I&#8217;va fallen into was that had all the settings in the
 custom section near the bottom of the template, but I didn&#8217;t include the
@@ -1534,10 +1463,10 @@ Deploy authorized ssh public keys
 </div>
 </div>
 <div class="sect1">
-<h2 id="_random_stuff">8. Random stuff</h2>
+<h2 id="_random_stuff">7. Random stuff</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_mac_addresses">8.1. Mac addresses</h3>
+<h3 id="_mac_addresses">7.1. Mac addresses</h3>
 <div class="paragraph"><p>If your box has more network interfaces, you might find (type <tt>ifconfig -a</tt>)
 that all your interfaces have the same MAC address. You can change that by
 setting a <tt>local-mac-address?</tt> setting with <tt>eeprom</tt> command.</p></div>
@@ -1553,7 +1482,7 @@ local-mac-address?=true</tt></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_contact">9. Contact</h2>
+<h2 id="_contact">8. Contact</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Comments and suggestions are greatly appreciated. Especially, if a bit of
 information was missing and it took you time to figure it out, let me know what
@@ -1565,7 +1494,7 @@ it was, for the sake of future generations.  Please use the following address:</
 </div>
 </div>
 <div class="sect1">
-<h2 id="_references">10. References</h2>
+<h2 id="_references">9. References</h2>
 <div class="sectionbody">
 <div class="ulist"><ul>
 <li>
@@ -1585,7 +1514,7 @@ it was, for the sake of future generations.  Please use the following address:</
 </li>
 <li>
 <p>
-<a href="http://www.sun.com/bigadmin/content/jet/">JumpStart</a>
+<a href="http://www.oracle.com/technetwork/systems/jet-toolkit/jet-toolkit-1614844.html">JumpStart</a>
 </p>
 </li>
 <li>
@@ -1616,8 +1545,8 @@ it was, for the sake of future generations.  Please use the following address:</
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Version 79<br />
-Last updated 2011-03-05 00:29:03 GMT
+Version 90<br />
+Last updated 2012-07-07 12:33:57 IST
 </div>
 </div>
 </body>
