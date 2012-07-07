@@ -4,7 +4,7 @@
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
 <meta name="generator" content="AsciiDoc 8.6.6" />
-<title>Solaris 10 preliminary setup</title>
+<title>Solaris packages with GAR</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
 
@@ -735,10 +735,9 @@ asciidoc.install(2);
 </head>
 <body class="article">
 <div id="header">
-<h1>Solaris 10 preliminary setup</h1>
+<h1>Solaris packages with GAR</h1>
 <span id="author">Maciej Bliziński</span><br />
-<span id="revnumber">version 88,</span>
-<span id="revdate">2012-03-13</span>
+<span id="revdate">$Id$</span>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
@@ -746,299 +745,97 @@ asciidoc.install(2);
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_ssh_access">1. SSH access</h2>
+<h2 id="_prerequisites">1. Prerequisites</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>If you have just installed a Solaris 10 box and logged in via the
-console for the first time, you probably see something similar to this:</p></div>
+<div class="ulist"><ul>
+<li>
+<p>
+A Solaris 10 installation
+</p>
+</li>
+<li>
+<p>
+<a href="solaris-10-preliminary-setup.html">Preliminary setup</a>
+</p>
+</li>
+</ul></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_setting_up_the_environment">2. Setting up the environment</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>You need a compiler.  At OpenCSW, Oracle Studio is the default compiler,
+but it&#8217;s slightly annoying to install, for the purposes of this howto,
+we&#8217;ll stick to GCC.</p></div>
 <div class="listingblock">
+<div class="title">Installing GCC 4</div>
 <div class="content">
-<pre><tt>Sun Microsystems Inc.   SunOS 5.10      Generic January 2005
-# █</tt></pre>
+<pre><tt>pkgutil -y -i gcc4g++</tt></pre>
 </div></div>
-<div class="paragraph"><p>The purpose of this document is to provide a quick overview of how to
-set up your Solaris 10 system.</p></div>
-<div class="paragraph"><p>The first thing I do after logging in via console, is starting bash.</p></div>
 <div class="listingblock">
+<div class="title">Installing GAR</div>
 <div class="content">
-<pre><tt># bash -l
-bash-3.00# █</tt></pre>
+<pre><tt>pkgutil -t http://buildfarm.opencsw.org/opencsw/experimental/gar -y -i gar</tt></pre>
 </div></div>
-<div class="paragraph"><p>Enable remote root ssh logins for convenience (make sure you have a strong root
-password!). <em>I don&#8217;t recommend enabling this for production systems.</em></p></div>
 <div class="listingblock">
+<div class="title">Configuring GAR</div>
 <div class="content">
-<pre><tt>cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
-sed &lt; /etc/ssh/sshd_config.bak &gt; /etc/ssh/sshd_config \
-        -e 's/PermitRootLogin no/PermitRootLogin yes/'
-svcadm restart ssh</tt></pre>
+<pre><tt>echo "SPKG_PACKAGER = Maciej Blizinski" &gt;&gt; ~/.garrc
+echo "SPKG_EMAIL = maciej@example.com" &gt;&gt; ~/.garrc</tt></pre>
 </div></div>
-<div class="paragraph"><p>Now you can login via ssh and avoid working with the slow system console. It&#8217;s
-also advisable to have more than one session open just in case something goes
-wrong.</p></div>
-<div class="paragraph"><p>To find out your IP address:</p></div>
+<div class="paragraph"><p>Since building on Solaris often requires patching the source code, gar
+automatically initializes a git repositoriy after unpacking the source
+code.  It makes it much easier to create patches.  In order to use git,
+we need to configure it.</p></div>
 <div class="listingblock">
+<div class="title">Configuring git</div>
 <div class="content">
-<pre><tt>ifconfig -a</tt></pre>
-</div></div>
-<div class="paragraph"><p>Go ahead and log in via ssh. (You need to start bash again.)</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>$ ssh root@&lt;ip-address&gt;
-(...)
-Sun Microsystems Inc.   SunOS 5.10      Generic January 2005
-# bash -l
-bash-3.00# █</tt></pre>
+<pre><tt>echo "export EDITOR=/opt/csw/bin/vim" &gt;&gt; ~/.bashrc
+git config --global user.email "you@example.com"
+git config --global user.name "Your Name"</tt></pre>
 </div></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_root_8217_s_home_directory_and_shell">2. Root&#8217;s home directory and shell</h2>
+<h2 id="_checking_out_the_gar_source_tree">3. Checking out the GAR source tree</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Let&#8217;s set root&#8217;s home directory and default shell. It&#8217;s been argued that having
-<tt>/</tt> as root&#8217;s home directory is fine because you can always use <tt>/var/tmp</tt> for
-working files. Yet somehow I don&#8217;t like the idea of having root&#8217;s <tt>.bashrc</tt> and
-<tt>.ssh</tt> kept in filesystem&#8217;s root.</p></div>
+<div class="paragraph"><p>We&#8217;re going to use mgar, a command-line utility.  The first command
+initializes the package tree, and the second command check out all the
+source code to disk.  It&#8217;s a lengthy process, so you can start it and
+catch a break.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>mkdir /root
-chmod 0700 /root
-chown root:root /root
-cp /etc/passwd /etc/passwd.bak
-sed &lt; /etc/passwd.bak &gt; /etc/passwd.new \
-  -e 's+root:x:0:0:Super-User:/:/sbin/sh+root:x:0:0:Super-User:/root:/bin/bash+'</tt></pre>
-</div></div>
-<div class="paragraph"><p>You can examine <tt>/etc/passwd.new</tt> to see if it contains the right thing. If it
-looks good, copy it to <tt>/etc/passwd</tt>.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>[[ -s /etc/passwd.new ]] &amp;&amp; cp /etc/passwd.new /etc/passwd || echo "It's empty."</tt></pre>
-</div></div>
-<div class="paragraph"><p>If you can now log off, as these changes require re-login to take effect.</p></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_ssh_keys">3. SSH keys</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>It&#8217;s a good moment to set up authentication using ssh keys.  From the system
-where your keys live, execute a command along these lines:</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>ssh-copy-id -i ~/.ssh/id_dsa.pub root@&lt;ip-address&gt;</tt></pre>
+<pre><tt>mgar init
+mgar up-pkgtree</tt></pre>
 </div></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_default_path">4. Default PATH</h2>
+<h2 id="_creating_a_new_build_description">4. Creating a new build description</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Let&#8217;s set default PATH.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>echo &gt;&gt; /etc/default/login \
-  "PATH=/opt/csw/gnu:/opt/csw/sbin:/opt/csw/bin:\
-/bin:/sbin:/usr/sbin:/usr/bin:\
-/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin:\
-/opt/SUNWspro/bin"
-
-echo &gt;&gt; /etc/default/login \
-"SUPATH=/opt/csw/gnu:/opt/csw/sbin:/opt/csw/bin:\
-/bin:/sbin:/usr/sbin:/usr/bin:\
-/opt/SUNWjet/bin:/usr/sfw/bin:/usr/sfw/sbin:/usr/ccs/bin:\
-/opt/SUNWspro/bin"</tt></pre>
-</div></div>
-<div class="admonitionblock">
-<table><tr>
-<td class="icon">
-<div class="title">Note</div>
-</td>
-<td class="content">The file <tt>/etc/default/login</tt> doesn&#8217;t really follow shell syntax, and it&#8217;s
-not meant to be sourced.</td>
-</tr></table>
-</div>
-<div class="paragraph"><p>It&#8217;s useful to set <tt>MANPATH</tt> as well.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>echo &gt;&gt; /etc/profile \
-  "MANPATH=/opt/csw/share/man:/opt/SUNWjet/man:/usr/sfw/share/man\
-/opt/SUNWexplo/man:/opt/SUNWspro/man:/usr/share/man"
-echo &gt;&gt; /etc/profile "export MANPATH"</tt></pre>
-</div></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_default_prompt">5. Default prompt</h2>
+<h2 id="_patching">5. Patching</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Bash has got sucky prompt by default, let&#8217;s set it to something different.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>PS1='\[\033[01;31m\]\h\[\033[01;34m\] \W \$\[\033[00m\] '
-echo "PS1='$PS1'" &gt;&gt; ~/.bashrc
-echo '[[ -r ~/.bashrc ]] &amp;&amp; source ~/.bashrc' &gt;&gt; ~/.bash_profile</tt></pre>
-</div></div>
-<div class="paragraph"><p>Now the prompt should look like this:</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>root@vsol01 / # █</tt></pre>
-</div></div>
-<div class="paragraph"><p>That&#8217;s better. You can now log off (but keep your console session open just in
-case) and log in again to see if your <tt>PATH</tt> and prompt are set correctly.</p></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_default_term">6. Default TERM</h2>
+<h2 id="_creating_the_gzipped_srv4_file">6. Creating the gzipped srv4 file</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>If you want to do any editing in vi (not vim, but the stock Solaris vi) and
-you&#8217;re using GNU screen, you need to set your TERM variable into something that
-bare Solaris understands:</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>export TERM=xterm</tt></pre>
-</div></div>
-<div class="paragraph"><p>Don&#8217;t make that permanent in ~/.bashrc, because we&#8217;ll have a better
-terminfo later on.</p></div>
+<div class="paragraph"><p>A srv4 file is what is commonly referred to as <em>a package</em>.</p></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_opencsw">7. OpenCSW</h2>
+<h2 id="_further_reading">7. Further reading</h2>
 <div class="sectionbody">
-<div class="paragraph"><p>Now, the first thing you most probably want to do, is getting a set of
-GNU tools. I recommend using the OpenCSW package repository, as it tends
-to have the most up to date versions of packages.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>pkgadd -d http://get.opencsw.org/now all</tt></pre>
-</div></div>
-<div class="paragraph"><p>Set up the default mirror (optional).</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>echo &gt;&gt; /etc/opt/csw/pkgutil.conf \
-  "mirror=ftp://ftp.heanet.ie/pub/opencsw/unstable"</tt></pre>
-</div></div>
-<div class="paragraph"><p>Update your OpenCSW catalog cache.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>pkgutil -U</tt></pre>
-</div></div>
-<div class="paragraph"><p>You can now install all the software available from OpenCSW.
-Some of my first choices:</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>pkgutil -y -i vim elinks findutils gawk ggrep gsed gtar wget rsync sudo \
-        screen mc gfile coreutils</tt></pre>
-</div></div>
-<div class="paragraph"><p>To initialize the findutils database:</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>gupdatedb &amp;</tt></pre>
-</div></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_terminfo">8. Terminfo</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>If you like to use colors in your terminal, and would like programs
-(e.g. vim) to know that your terminal understands colors, you need
-a better terminfo.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>pkgutil -y -i terminfo
-echo "TERMINFO=/opt/csw/share/terminfo" &gt;&gt; /etc/profile
-echo "export TERMINFO" &gt;&gt; /etc/profile</tt></pre>
-</div></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_pager">9. Pager</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>Solaris <em>man</em> by default uses the <em>more</em> utility to display output page
-by page.  The annoying limitation of <em>more</em> is that it doesn&#8217;t allow you
-to scroll backwards.  To get around this, set the PAGER environment
-variable.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>pkgutil -y -i less
-echo "PAGER=/opt/csw/bin/less" &gt;&gt; /etc/profile
-echo "export PAGER" &gt;&gt; /etc/profile</tt></pre>
-</div></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_regular_user_setup">10. Regular user setup</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>You probably don&#8217;t want to perform all the operations as root.  You can set up
-a regular user account for yourself.  If you&#8217;re accustomed to having your home
-directory in /home, an attempt to a user with it will and up with an unhelpful
-error message: "UX: useradd: ERROR: Unable to create the home directory:
-Operation not applicable."  The problem is that in a default installation, the
-/home directory is controlled by autofs.  In order to create directories there,
-you need to either disable, or reconfigure autofs.  In this document, we&#8217;ll go
-for the disable option.  Set your user name in the first line.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>REGULAR_USER=maciej
-svcadm disable autofs
-useradd -s /bin/bash -m -d /home/${REGULAR_USER} ${REGULAR_USER}
-passwd ${REGULAR_USER}</tt></pre>
-</div></div>
-<div class="paragraph"><p>For convenience, we&#8217;ll also copy the ssh public key to allow easy ssh access.
-While we&#8217;re at it, we&#8217;ll also set the prompt.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>mkdir /home/${REGULAR_USER}/.ssh
-chmod 700 /home/${REGULAR_USER}/.ssh
-cp /root/.ssh/authorized_keys /home/${REGULAR_USER}/.ssh/authorized_keys
-UPS1='\[\033[00;33m\]\u@\h\[\033[01;34m\] \w \$\[\033[00m\] '
-echo "PS1='$UPS1'" &gt;&gt; /home/${REGULAR_USER}/.bashrc
-echo '[[ -r ~/.bashrc ]] &amp;&amp; source ~/.bashrc' \
-  &gt;&gt; /home/${REGULAR_USER}/.bash_profile
-chown -R ${REGULAR_USER} /home/${REGULAR_USER}</tt></pre>
-</div></div>
-<div class="paragraph"><p>You will probably want sudo access from your regular user account.  sudo is not
-available in the standard Solaris installation, because real men use pfexec.
-However, you can install sudo from OpenCSW (see above).  By default, sudo won&#8217;t
-allow your user to gain root permissions.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>echo "${REGULAR_USER} ALL =(ALL) ALL" &gt;&gt; /etc/opt/csw/sudoers
-chmod 0440 /etc/opt/csw/sudoers</tt></pre>
-</div></div>
-<div class="paragraph"><p>Note that generally, <em>visudo</em> is the preferred way to edit the sudoers file.
-It&#8217;s just not convenient for scripting.</p></div>
-<div class="paragraph"><p>Log in as a regular user, check your PS1, PATH and MANPATH, and your
-sudo access.</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>maciej@vsol01 ~ $ sudo echo foo
-
-We trust you have received the usual lecture from the local System
-Administrator. It usually boils down to these three things:
-
-    #1) Respect the privacy of others.
-    #2) Think before you type.
-    #3) With great power comes great responsibility.
-
-Password:
-foo
-maciej@vsol01 ~ $ █</tt></pre>
-</div></div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_congratulations">11. Congratulations!</h2>
-<div class="sectionbody">
-<div class="paragraph"><p>Your preliminary setup is now complete.  If you have any questions, comments or
-suggestions, here&#8217;s my contact information:</p></div>
-<div class="listingblock">
-<div class="content">
-<pre><tt>python -c "print 'bWFjaWVqLmJsaXppbnNraUBnbWFpbC5jb20='.decode('base64')"</tt></pre>
-</div></div>
 </div>
 </div>
 </div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Version 88<br />
-Last updated 2012-07-07 10:26:14 IST
+Last updated 2011-02-02 22:40:21 GMT
 </div>
 </div>
 </body>

@@ -1,8 +1,13 @@
+# $Id$
+#
 # Required packages:
 # - asciidoc
 # - tofrodos
 
-all: sparc-box-turnup.html solaris-10-preliminary-setup.html
+all: \
+	opencsw-solaris-packages.html \
+	solaris-10-preliminary-setup.html \
+	sparc-box-turnup.html
 
 %.html: %.txt
 	asciidoc -a toc -a numbered $<
