@@ -13,12 +13,14 @@
 #
 # 1. Edit the script to set correct paths.
 # 2. Run the script with the "setup" argument.
+#    ./vbox_setup.sh setup
 # 3. Start the instance:
 #    VBoxHeadless --startvm Screencast --vnc --vncport 5902
 # 4. Connect to the instance using a VNC client. Install Solaris.
 # 5. Stop the instance.
 # 6. Run the script with the "eject" argument to remove the installation
 #    DVD.
+#    ./vbox-setup.sh eject
 # 7. Start the vm again using VBoxHeadless, and use it. Connect first
 #    via VNC, then make it available via the network.
 #

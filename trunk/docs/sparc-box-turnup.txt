@@ -1,17 +1,22 @@
-Turning up a sparc box
-======================
+Installing a SPARC server
+=========================
 Maciej Bliziński
 $Id$
 
-So, you've got this sparc machine you're planning to play with, right?
+What to do if you have a SPARC box (e.g. a netra) and a Solaris CD or DVD, but
+the machine has no CD ROM drive. The OS can be installed over network using
+Jumpstart, but Jumpstart is rather hard to set up on GNU/Linux, so it's easier
+to first make an installation of Solaris on a virtual machine, and use it to
+install Solaris in the SPARC server.
 
-Has it got any CD-ROM? No? Uh oh, you'll need to do some fiddling to get the OS
-there.  Your best bet is the network.  I assume you already have an x86 box, and
-your network layout looks similar to this one:
+You probably already have an x86 box, and your network layout looks
+similar to this one:
 
 --------------------------------------------------------------------------------
 +----------+                        +------------+
+|          |                        |            |
 | x86 box ------(192.168.1.0/24)------ sparc-box |
+|          |                        |            |
 +----------+                        +------------+
 --------------------------------------------------------------------------------
 
@@ -28,7 +33,7 @@ adapter. You'll have a two-path connection to the sparc box.
 +-(x86 box)------+                               +-(sparc box)-------+
 |                |                               |                   |
 |         [eth0] |                               | [hme0]            |
-|	       [RJ45] ----(192.168.1.0/24)---- [RJ45]                |
+|              [RJ45] ----(192.168.1.0/24)---- [RJ45]                |
 |                |                               |                   |
 | [/dev/ttyUSB0] |                               | [/dev/ttya]       |
 |              [USB] -----(serial cable)------ [serial port]         |
@@ -72,8 +77,8 @@ there's nothing preventing you from setting them all up. However, I think that
 installing Solaris and using JET has a much more flat learning curve.
 
 NOTE: Sun like to distort the common symbol for Intel architecture, `x86`.  You
-may see capitalized `X86` or `i86pc` (huh?). I have no idea why is that. I'll
-keep calling it the usual way: `x86`.
+may see capitalized `X86` or `i86pc`. I have no idea why is that. I'll keep
+calling it the usual way: `x86`.
 
 If we're going the virtual machine route, the diagram will look more like this:
 
@@ -94,7 +99,7 @@ If we're going the virtual machine route, the diagram will look more like this:
 |                [br0]----+  |                         |                       |
 |                         |  |                         |                       |
 |                     [eth0] |                         | [hme0]                |
-|	                       [RJ45] --(192.168.1.0/24)-- [RJ45]                    |
+|                        [RJ45] --(192.168.1.0/24)-- [RJ45]                    |
 |                            |                         |                       |
 |             [/dev/ttyUSB0] |                         | [/dev/ttya]           |
 |                         [USB] ---(serial cable)--- [serial port]             |
@@ -114,9 +119,8 @@ Installing VirtualBox
 
 I tried running Solaris with few different hypervisors. I got it sort of
 installed on kvm, but it didn't really want to run.  My best experiences were
-with VirtualBox, which is now a Sun product, so it's important for them, for
-political reasons I guess, that it runs Solaris smoothly. Browse the source
-code and look into the `scripts/vbox` directory.
+with VirtualBox, which is now an Oracle product.  I wrote link:vbox_setup.sh[a
+script] which automates the creation of a virtual machine on a headless system.
 
 NOTE: This section discusses a headless installation of VirtualBox,
 something that you would have on a remote machine or a machine without
@@ -133,99 +137,17 @@ you'll need an additional package with kernel headers:
 sudo aptitude install linux-headers-$(uname -r)
 --------------------------------------------------------------------------------
 
-You need to use bridged networking with your virtual machine. On Ubuntu, the
-network configuration should look like this:
-
-.`/etc/network/interfaces`
---------------------------------------------------------------------------------
-# The loopback network interface
-auto lo
-iface lo inet loopback
-
-# The primary network interface
-iface br0 inet dhcp
-bridge_ports eth0
-
-auto eth0
-auto br0
---------------------------------------------------------------------------------
-
-Creating a virtual machine
---------------------------
-
-Create a virtual hard disk.
-
---------------------------------------------------------------------------------
-VBoxManage createvdi --filename /path/to/file.vdi -size 16384
---------------------------------------------------------------------------------
-
-Create the virtual machine and settings.
-
---------------------------------------------------------------------------------
-VBoxManage createvm --name yourvmname --register
-VBoxManage modifyvm yourvmname \
-  --ostype Solaris_64 \
-  --memory 512 \
-  --acpi off \
-  --nic1 bridged \
-  --nictype1 82540EM \
-  --cableconnected1 on \
-  --nicspeed1 10000 \
-  --boot1 dvd \
-  --boot2 disk
-VBoxManage storagectl vsol06 \
-  --name "SCSI Controller" \
-  --add scsi \
-  --controller PIIX4
-VBoxManage storageattach vsol06 \
-  --storagectl "SCSI Controller" \
-  --port 0 \
-  --device 0 \
-  --type hdd \
-  --medium /path/to/file.vdi
-
---------------------------------------------------------------------------------
+You need to use bridged networking with your virtual machine.
 
 NOTE: Give your virtual machine 16GB of disk at minimum. You will want to cram
 some DVD images on it, plus their extracted form. Of course, you can always
 create an additional disk and attach it afterwards, but it's better to save
 hassle.
 
-Take a look at the `vrdp` setting. It tells VirtualBox to expose virtual
-machine's console via rdesktop protocol. If you're running VirtualBox locally,
-you can connect to a running virtual machine with:
-
---------------------------------------------------------------------------------
-rdesktop localhost:3990
---------------------------------------------------------------------------------
-
-If you're running VirtualBox on a remote machine, you can create an ssh tunnel
-and use it:
-
---------------------------------------------------------------------------------
-ssh -f -N -C -L 3990:localhost:3990 remotemachine
-rdesktop localhost:3990
---------------------------------------------------------------------------------
-
-
 Installing Solaris
 ------------------
-Get the DVD ISO image from Sun's website. You need to register, but the download
-is free.
-
-'Insert' your ISO image into the virtual machine.
-
---------------------------------------------------------------------------------
-VBoxManage modifyvm yourvmname -dvd /path/to/solaris.iso
---------------------------------------------------------------------------------
-
-Start the virtual machine.
-
---------------------------------------------------------------------------------
-VBoxManage startvm yourvmname
---------------------------------------------------------------------------------
-
-And run rdesktop.
+Get the DVD ISO image from the Oracle website. You need to register, but the
+download is free.
 
 I won't go into much detail of how to install Solaris on a virtual machine. Just
 a couple of hints.
@@ -241,8 +163,8 @@ a couple of hints.
   logged in.  Instead, click _Options_ near the bottom of the login window, and
   choose _Command Line Login_.
 
-At this point, I'll happily assume you can log in as root, and you see something
-like this:
+At this point, I'll assume you can log in as root, and you see something like
+this:
 
 --------------------------------------------------------------------------------
 Sun Microsystems Inc.   SunOS 5.10      Generic January 2005
@@ -278,16 +200,15 @@ Usage: grep -hblcnsviw pattern file . . .
 # █
 --------------------------------------------------------------------------------
 
-There's some work you need to do before you can _actually_ work, as opposed to
-just staring at a blinking cursor and thinking how awesome it is to have a real
-Unix running in front of you. (What does it mean anyway, a _real_ Unix? I never
-figured that out.)
+There's some work you need to do before you can _actually_ use the system, as
+opposed to just staring at a blinking cursor and thinking how awesome it is to
+have installed Solaris.
 
 
 Preliminary setup
 -----------------
 
-We won't be spending _too_ much time on this, because it's only an intermediate
+We won't be spending too much time on this, because it's only an intermediate
 system, but let's get a little more comfortable here.
 
 Please refer to link:solaris-10-preliminary-setup.html[Solaris 10
@@ -299,9 +220,11 @@ JET, JumpStart Enterprise Toolkit
 Installation
 ~~~~~~~~~~~~
 
-Go to the JumpStart website, download the `jet.pkg.bz2` package and follow
-instructions. It's basically about installing the jet package, then copying
-Solaris media and configuring your client.
+Go to the
+link:http://www.oracle.com/technetwork/systems/jet-toolkit/jet-toolkit-1614844.html[JumpStart
+website], download `jet.pkg.bz2` and follow instructions. It's basically about
+installing the JET package, then copying Solaris media and configuring your
+client.
 
 Some stuff that isn't covered in JumpStart instructions:
 
@@ -357,15 +280,14 @@ What is a template
 A _template_ in JET is not so much a template, at least from your perspective.
 It is a template in a sense, that it's used to generate configuration for
 jumpstart, the underlying technology, which is really a collection of RARP, TFTP
-and NFS stuff.
+and NFS configuration files.
 
 It's best if you have your hostname configured in DNS and RevDNS. If your host
 is, say `sparcbox`, and `sparcbox` resolves in your DNS, JET will pick up the IP
 address and put it into the template.
 
-Making one
-~~~~~~~~~~
-Now, let's make it.
+Making a template
+~~~~~~~~~~~~~~~~~
 
 --------------------------------------------------------------------------------
 cd /opt/SUNWjet/Templates
@@ -815,11 +737,11 @@ References
 * http://www.sun.com/solaris/[Solaris Operating System]
 * http://www.opencsw.org/[OpenCSW]
 * http://www.virtualbox.org/[VirtualBox]
-* http://www.sun.com/bigadmin/content/jet/[JumpStart]
+* http://www.oracle.com/technetwork/systems/jet-toolkit/jet-toolkit-1614844.html[JumpStart]
 * http://www.sun.com/software/security/jass/[SUNWjass]
 * http://www.sun.com/service/stb/index.jsp[Explorer]
 * http://devin.com/debian/debian-on-netra.html[Installing Debian on Netra T1]
   (serial cable pinout table)
 * http://tinyurl.com/9t249[Creating Solaris packages]
 
-// vim:set ft=asciidoc:
+// vim:ft=asciidoc:
