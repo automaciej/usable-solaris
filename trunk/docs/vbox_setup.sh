@@ -55,7 +55,7 @@ VBoxManage modifyvm "${VM_NAME}" \
 	--boot1 dvd \
 	--nic1 bridged \
 	--bridgeadapter1 eth0 \
-	--macaddress "${MAC}" \
+	--macaddress1 "${MAC}" \
 	--audio null \
 	--usb off
 VBoxManage createhd \
