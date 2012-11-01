@@ -36,21 +36,22 @@ DISK_DIR="/var/somewhere"
 VM_NAME="Example VM"
 VDI="${DISK_DIR}/${VM_NAME}/example.vdi"
 CD="/path/to/for/example/sol-10-u9-ga-x86-dvd.iso"
-DISK_SIZE=20000
-RAM_MB=1024
+DISK_IN_MB=20000
+MEMORY_IN_MB=1024
+# Examples: "Ubuntu_64", "OpenSolaris_64"
 OSTYPE="OpenSolaris_64"
 # So that you can set up your DNS and DHCP to give a specific IP address
 # and assign a name based on a MAC address. dnsmasq can do that.
-MAC="08:00:27:00:00:01"
+MAC="080027000001"
 
-function setup {
+function vbox_setup {
 VBoxManage createvm \
 	--name "${VM_NAME}" \
 	--basefolder "${DISK_DIR}" \
 	--ostype "${OSTYPE}" \
 	--register
 VBoxManage modifyvm "${VM_NAME}" \
-	--memory "${RAM_MB}" \
+	--memory "${MEMORY_IN_MB}" \
 	--acpi on \
 	--boot1 dvd \
 	--nic1 bridged \
@@ -60,7 +61,7 @@ VBoxManage modifyvm "${VM_NAME}" \
 	--usb off
 VBoxManage createhd \
 	--filename "${VDI}" \
-	--size "${DISK_SIZE}"
+	--size "${DISK_IN_MB}"
 VBoxManage storagectl "${VM_NAME}" \
 	--name "IDE Controller" --add ide
 VBoxManage storagectl "${VM_NAME}" \
@@ -75,21 +76,19 @@ VBoxManage storageattach "${VM_NAME}" \
 	--medium "${CD}"
 }
 
-function teardown {
+function vbox_teardown {
 VBoxManage unregistervm "${VM_NAME}"
 rm -rf "${DISK_DIR}/${VM_NAME}"
 }
 
-if [[ "$1" == teardown ]]
-then
-	teardown
-elif [[ "$1" == eject ]]
-then
+function vbox_eject {
 VBoxManage storageattach "${VM_NAME}" \
 	--storagectl "IDE Controller" \
 	--type dvddrive --device 0 --port 0 \
 	--medium none
-elif [[ "$1" == setup ]]
-then
-	setup
+}
+
+if   [[ "$1" == teardown ]]; then vbox_teardown
+elif [[ "$1" == eject ]];    then vbox_eject
+elif [[ "$1" == setup ]];    then vbox_setup
 fi
