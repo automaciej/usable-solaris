@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
 <head>
 <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=UTF-8" />
-<meta name="generator" content="AsciiDoc 8.6.6" />
+<meta name="generator" content="AsciiDoc 8.6.7" />
 <title>Solaris 10 preliminary setup</title>
 <style type="text/css">
 /* Shared CSS for AsciiDoc xhtml11 and html5 backends */
@@ -349,7 +349,7 @@ div.colist td img {
   margin-bottom: 0.1em;
 }
 
-div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
+div.toclevel0, div.toclevel1, div.toclevel2, div.toclevel3, div.toclevel4 {
   margin-top: 0;
   margin-bottom: 0;
 }
@@ -407,6 +407,8 @@ span.underline { text-decoration: underline; }
 span.overline { text-decoration: overline; }
 span.line-through { text-decoration: line-through; }
 
+div.unbreakable { page-break-inside: avoid; }
+
 
 /*
  * xhtml11 specific
@@ -414,7 +416,7 @@ span.line-through { text-decoration: line-through; }
  * */
 
 tt {
-  font-family: monospace;
+  font-family: "Courier New", Courier, monospace;
   font-size: inherit;
   color: navy;
 }
@@ -453,7 +455,7 @@ div.tableblock > table[frame="vsides"] {
  * */
 
 .monospaced {
-  font-family: monospace;
+  font-family: "Courier New", Courier, monospace;
   font-size: inherit;
   color: navy;
 }
@@ -581,7 +583,7 @@ toc: function (toclevels) {
 
   function tocEntries(el, toclevels) {
     var result = new Array;
-    var re = new RegExp('[hH]([2-'+(toclevels+1)+'])');
+    var re = new RegExp('[hH]([1-'+(toclevels+1)+'])');
     // Function that scans the DOM tree for header elements (the DOM2
     // nodeIterator API would be a better technique but not supported by all
     // browsers).
@@ -610,7 +612,7 @@ toc: function (toclevels) {
   var i;
   for (i = 0; i < toc.childNodes.length; i++) {
     var entry = toc.childNodes[i];
-    if (entry.nodeName == 'div'
+    if (entry.nodeName.toLowerCase() == 'div'
      && entry.getAttribute("class")
      && entry.getAttribute("class").match(/^toclevel/))
       tocEntriesToRemove.push(entry);
@@ -656,7 +658,7 @@ footnotes: function () {
   var entriesToRemove = [];
   for (i = 0; i < noteholder.childNodes.length; i++) {
     var entry = noteholder.childNodes[i];
-    if (entry.nodeName == 'div' && entry.getAttribute("class") == "footnote")
+    if (entry.nodeName.toLowerCase() == 'div' && entry.getAttribute("class") == "footnote")
       entriesToRemove.push(entry);
   }
   for (i = 0; i < entriesToRemove.length; i++) {
@@ -975,7 +977,7 @@ for the disable option.  Set your user name in the first line.</p></div>
 <div class="listingblock">
 <div class="content">
 <pre><tt>REGULAR_USER=maciej
-svcadm disable autofs
+svcadm disable autofs &amp;&amp; sleep 2 # Give it time to take effect
 useradd -s /bin/bash -m -d /home/${REGULAR_USER} ${REGULAR_USER}
 passwd ${REGULAR_USER}</tt></pre>
 </div></div>
@@ -998,7 +1000,8 @@ However, you can install sudo from OpenCSW (see above).  By default, sudo won&#8
 allow your user to gain root permissions.</p></div>
 <div class="listingblock">
 <div class="content">
-<pre><tt>echo "${REGULAR_USER} ALL =(ALL) ALL" &gt;&gt; /etc/opt/csw/sudoers
+<pre><tt>pkgutil -y -i sudo
+echo "${REGULAR_USER} ALL =(ALL) ALL" &gt;&gt; /etc/opt/csw/sudoers
 chmod 0440 /etc/opt/csw/sudoers</tt></pre>
 </div></div>
 <div class="paragraph"><p>Note that generally, <em>visudo</em> is the preferred way to edit the sudoers file.
@@ -1038,7 +1041,7 @@ suggestions, here&#8217;s my contact information:</p></div>
 <div id="footer">
 <div id="footer-text">
 Version 90<br />
-Last updated 2012-07-07 10:43:07 IST
+Last updated 2012-12-17 00:13:13 GMT
 </div>
 </div>
 </body>

@@ -239,7 +239,7 @@ for the disable option.  Set your user name in the first line.
 
 --------------------------------------------------------------------------------
 REGULAR_USER=maciej
-svcadm disable autofs
+svcadm disable autofs && sleep 2 # Give it time to take effect
 useradd -s /bin/bash -m -d /home/${REGULAR_USER} ${REGULAR_USER}
 passwd ${REGULAR_USER}
 --------------------------------------------------------------------------------
@@ -264,6 +264,7 @@ However, you can install sudo from OpenCSW (see above).  By default, sudo won't
 allow your user to gain root permissions.
 
 --------------------------------------------------------------------------------
+pkgutil -y -i sudo
 echo "${REGULAR_USER} ALL =(ALL) ALL" >> /etc/opt/csw/sudoers
 chmod 0440 /etc/opt/csw/sudoers
 --------------------------------------------------------------------------------
