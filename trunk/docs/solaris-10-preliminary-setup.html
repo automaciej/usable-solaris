@@ -739,8 +739,8 @@ asciidoc.install(2);
 <div id="header">
 <h1>Solaris 10 preliminary setup</h1>
 <span id="author">Maciej Bliziński</span><br />
-<span id="revnumber">version 90,</span>
-<span id="revdate">2012-07-07</span>
+<span id="revnumber">version 97,</span>
+<span id="revdate">2012-12-17</span>
 <div id="toc">
   <div id="toctitle">Table of Contents</div>
   <noscript><p><b>JavaScript must be enabled in your browser to display the table of contents.</b></p></noscript>
@@ -771,7 +771,7 @@ password!). <em>I don&#8217;t recommend enabling this for production systems.</e
 <div class="content">
 <pre><tt>cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
 sed &lt; /etc/ssh/sshd_config.bak &gt; /etc/ssh/sshd_config \
-        -e 's/PermitRootLogin no/PermitRootLogin yes/'
+  -e 's/PermitRootLogin no/PermitRootLogin yes/'
 svcadm restart ssh</tt></pre>
 </div></div>
 <div class="paragraph"><p>Now you can login via ssh and avoid working with the slow system console. It&#8217;s
@@ -900,7 +900,30 @@ terminfo later on.</p></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_opencsw">7. OpenCSW</h2>
+<h2 id="_disabling_useless_services">7. Disabling useless services</h2>
+<div class="sectionbody">
+<div class="paragraph"><p>There is a number of services which are enabled by default, but they occupy
+memory and don&#8217;t do anything useful.</p></div>
+<div class="listingblock">
+<div class="content">
+<pre><tt>services=(
+        svc:/application/graphical-login/cde-login:default
+        svc:/application/management/dmi:default
+        svc:/application/management/sma:default
+        svc:/application/management/snmpdx:default
+        svc:/application/management/wbem:default
+        svc:/system/webconsole:console
+)
+for s in $services
+do
+        svcadm disable $s
+done
+unset services</tt></pre>
+</div></div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_opencsw">8. OpenCSW</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Now, the first thing you most probably want to do, is getting a set of
 GNU tools. I recommend using the OpenCSW package repository, as it tends
@@ -935,7 +958,7 @@ Some of my first choices:</p></div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_terminfo">8. Terminfo</h2>
+<h2 id="_terminfo">9. Terminfo</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>If you like to use colors in your terminal, and would like programs
 (e.g. vim) to know that your terminal understands colors, you need
@@ -949,7 +972,7 @@ echo "export TERMINFO" &gt;&gt; /etc/profile</tt></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_pager">9. Pager</h2>
+<h2 id="_pager">10. Pager</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Solaris <em>man</em> by default uses the <em>more</em> utility to display output page
 by page.  The annoying limitation of <em>more</em> is that it doesn&#8217;t allow you
@@ -964,7 +987,7 @@ echo "export PAGER" &gt;&gt; /etc/profile</tt></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_regular_user_setup">10. Regular user setup</h2>
+<h2 id="_regular_user_setup">11. Regular user setup</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>You probably don&#8217;t want to perform all the operations as root.  You can set up
 a regular user account for yourself.  If you&#8217;re accustomed to having your home
@@ -1026,7 +1049,7 @@ maciej@vsol01 ~ $ █</tt></pre>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_congratulations">11. Congratulations!</h2>
+<h2 id="_congratulations">12. Congratulations!</h2>
 <div class="sectionbody">
 <div class="paragraph"><p>Your preliminary setup is now complete.  If you have any questions, comments or
 suggestions, here&#8217;s my contact information:</p></div>
@@ -1040,8 +1063,8 @@ suggestions, here&#8217;s my contact information:</p></div>
 <div id="footnotes"><hr /></div>
 <div id="footer">
 <div id="footer-text">
-Version 90<br />
-Last updated 2012-12-17 00:13:13 GMT
+Version 97<br />
+Last updated 2013-04-27 07:49:39 IST
 </div>
 </div>
 </body>

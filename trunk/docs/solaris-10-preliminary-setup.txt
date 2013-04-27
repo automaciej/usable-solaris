@@ -30,7 +30,7 @@ password!). _I don't recommend enabling this for production systems._
 --------------------------------------------------------------------------------
 cp /etc/ssh/sshd_config /etc/ssh/sshd_config.bak
 sed < /etc/ssh/sshd_config.bak > /etc/ssh/sshd_config \
-	-e 's/PermitRootLogin no/PermitRootLogin yes/'
+  -e 's/PermitRootLogin no/PermitRootLogin yes/'
 svcadm restart ssh
 --------------------------------------------------------------------------------
 
@@ -156,6 +156,29 @@ export TERM=xterm
 
 Don't make that permanent in ~/.bashrc, because we'll have a better
 terminfo later on.
+
+
+Disabling useless services
+--------------------------
+
+There is a number of services which are enabled by default, but they occupy
+memory and don't do anything useful.
+
+--------------------------------------------------------------------------------
+services=(
+	svc:/application/graphical-login/cde-login:default
+	svc:/application/management/dmi:default
+	svc:/application/management/sma:default
+	svc:/application/management/snmpdx:default
+	svc:/application/management/wbem:default
+	svc:/system/webconsole:console
+)
+for s in $services
+do
+	svcadm disable $s
+done
+unset services
+--------------------------------------------------------------------------------
 
 
 OpenCSW
