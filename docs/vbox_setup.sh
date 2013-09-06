@@ -1,4 +1,5 @@
 #!/bin/bash
+# vim:sw=2 ts=2 sts=2 expandtab:
 
 # This is an example script, how to set up a virtual guest using
 # VirtualBox. This configuration was tested with Solaris 10U9.
@@ -32,17 +33,25 @@ set -x
 set -u
 set -e
 
-DISK_DIR="/var/somewhere"
-VM_NAME="Example VM"
-VDI="${DISK_DIR}/${VM_NAME}/example.vdi"
-CD="/path/to/for/example/sol-10-u9-ga-x86-dvd.iso"
-DISK_IN_MB=20000
-MEMORY_IN_MB=1024
+readonly DISK_DIR="/var/somewhere"
+readonly VM_NAME="examplevm"
+readonly VNC_PORT=5902
+
+readonly CD="/media/ivy-shared/Software/Solaris/sol-10-u9-ga-x86-dvd.iso"
+readonly DISK_IN_MB=50000
+readonly MEMORY_IN_MB=1024
+readonly OSTYPE="OpenSolaris_64"
+
+readonly DISK_NAME="${VM_NAME}"
+readonly VDI="${DISK_DIR}/${VM_NAME}/${DISK_NAME}.vdi"
 # Examples: "Ubuntu_64", "OpenSolaris_64"
-OSTYPE="OpenSolaris_64"
-# So that you can set up your DNS and DHCP to give a specific IP address
-# and assign a name based on a MAC address. dnsmasq can do that.
-MAC="080027000001"
+
+# The MAC address can be set up if you want to assign a specific IP address and
+# a DNS name to your virtual host. dnsmasq can do that.
+readonly MAC="080027000001"
+
+# The serial console has to be enabled on the OS side
+# http://docs.oracle.com/cd/E19150-01/820-1853-16/AppB.html
 
 function vbox_setup {
 VBoxManage createvm \
@@ -58,7 +67,10 @@ VBoxManage modifyvm "${VM_NAME}" \
 	--bridgeadapter1 eth0 \
 	--macaddress1 "${MAC}" \
 	--audio null \
-	--usb off
+	--usb off \
+	--nictype1 Am79C970A \
+	--uart1 0x3F8 4 \
+	--uartmode1 server /tmp/${VM_NAME}console
 VBoxManage createhd \
 	--filename "${VDI}" \
 	--size "${DISK_IN_MB}"
@@ -66,10 +78,11 @@ VBoxManage storagectl "${VM_NAME}" \
 	--name "IDE Controller" --add ide
 VBoxManage storagectl "${VM_NAME}" \
 	--name "SATA Controller" --add sata
-VBoxManage storageattach "${VM_NAME}" \
-	--storagectl "SATA Controller" \
-	--type hdd --device 0 --port 0 \
-	--medium "${VDI}"
+vbox_attach_disk
+vbox_insert_cd
+}
+
+function vbox_insert_cd {
 VBoxManage storageattach "${VM_NAME}" \
 	--storagectl "IDE Controller" \
 	--type dvddrive --device 0 --port 0 \
@@ -77,8 +90,7 @@ VBoxManage storageattach "${VM_NAME}" \
 }
 
 function vbox_teardown {
-VBoxManage unregistervm "${VM_NAME}"
-rm -rf "${DISK_DIR}/${VM_NAME}"
+VBoxManage unregistervm "${VM_NAME}" --delete
 }
 
 function vbox_eject {
@@ -88,7 +100,27 @@ VBoxManage storageattach "${VM_NAME}" \
 	--medium none
 }
 
-if   [[ "$1" == teardown ]]; then vbox_teardown
-elif [[ "$1" == eject ]];    then vbox_eject
-elif [[ "$1" == setup ]];    then vbox_setup
-fi
+function vbox_detach_disk {
+VBoxManage storageattach "${VM_NAME}" \
+	--storagectl "SATA Controller" \
+	--type hdd --device 0 --port 0 \
+	--medium "none"
+}
+function vbox_attach_disk {
+VBoxManage storageattach "${VM_NAME}" \
+	--storagectl "SATA Controller" \
+	--type hdd --device 0 --port 0 \
+	--medium "${VDI}"
+}
+
+case "$1" in
+  teardown) vbox_teardown ;;
+  eject) vbox_eject ;;
+  insert) vbox_insert_cd ;;
+  setup) vbox_setup ;;
+  fix-disk) vbox_fix_disk ;;
+  run)
+    VBoxHeadless --startvm ${VM_NAME} --vnc --vncport ${VNC_PORT}
+    ;;
+  *) echo >&2 Operation not supported. ;;
+esac
