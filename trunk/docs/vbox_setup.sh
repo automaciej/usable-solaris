@@ -37,7 +37,7 @@ readonly DISK_DIR="/var/somewhere"
 readonly VM_NAME="examplevm"
 readonly VNC_PORT=5902
 
-readonly CD="/media/ivy-shared/Software/Solaris/sol-10-u9-ga-x86-dvd.iso"
+readonly CD="/path/to/sol-10-u9-ga-x86-dvd.iso"
 readonly DISK_IN_MB=50000
 readonly MEMORY_IN_MB=1024
 readonly OSTYPE="OpenSolaris_64"
